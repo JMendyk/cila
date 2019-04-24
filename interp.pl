@@ -279,9 +279,15 @@ evalProg(while(Cond, Body), Mem, MemOut) :-
     evalProg(Body, Mem, Mem1),
     evalProg(while(Cond, Body), Mem1, MemOut).
 
+emptyInterpMemory([]).
+
 interp(Str, Val) :-
     parse(Str, _, Ast),
-    evalLog(Ast, [], Val).
+    evalProg(Ast, [], Val).
+
+interpWithMemory(Str, Memory, Val) :-
+    parse(Str, _, Ast),
+    evalProg(Ast, Memory, Val).
 
 interp_file(Path, Val) :-
     parse_file(Path, _, Ast),
