@@ -1,5 +1,3 @@
-#!/usr/bin/env swipl -g main -t halt
-
 library(readline).
 :- consult(interp).
 
