@@ -1,0 +1,145 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{amssymb}
+% \usepackage[polish]{babel}
+\usepackage[english]{babel}
+
+% Różne przydatne paczki:
+\usepackage{amsmath, amsfonts} % - znaczki matematyczne
+\usepackage{indentfirst} % - wcięcie na początku pierwszego akapitu
+\usepackage{hyperref} % - komenda \url 
+\usepackage{graphics} % - dołączanie obrazków
+\usepackage[hdivide={2.54cm,*,2.54cm},vdivide={2.54cm,*,2.54cm}]{geometry}
+\frenchspacing
+\usepackage{enumitem} % - enumeracja z użyciem liter
+
+% \pagestyle{empty} % - brak numerów stron
+
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+\usepackage{ textcomp }
+
+% Floor and ceil as single control sequence
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+\usepackage{titling}
+\usepackage{wasysym}
+\renewcommand\maketitlehooka{\null\mbox{}\vfill}
+\renewcommand\maketitlehookd{\vfill\null}
+
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{multicol}
+
+\usepackage{xcolor} % text background color
+
+% Section name before numbering
+\usepackage[explicit]{titlesec}
+% \titleformat{\section}{\normalfont\Large\bfseries}{}{0em}{#1\ \thesection}
+
+\newtheorem{tw}{Twierdzenie}[section]
+\newtheorem{fakt}{Fakt}[section]
+\newtheorem{defn}{Definicja}[section]
+\newtheorem{teza}{Teza}[section]
+\newtheorem{lemat}{Lemat}[section]
+\newtheorem*{defn*}{Definicja}
+\newtheorem{sidenote}[tw]{Uwaga}
+
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}%
+
+\usepackage{listings}% http://ctan.org/pkg/listings
+\usepackage{lstautogobble}
+\lstset{basicstyle=\ttfamily,mathescape}
+
+\lstnewenvironment{lstverbatim}[1][]{
+  \lstset { autogobble=true, basicstyle=\ttfamily, mathescape, escapechar=\@,
+    columns=fullflexible, breaklines=true, keepspaces=true } }{}
+
+% non-full-page \maketitle, https://tex.stackexchange.com/a/29595
+\makeatletter
+\def\@maketitle{%
+  \newpage
+%  \null% DELETED
+%  \vskip 2em% DELETED
+  \begin{center}%
+  \let \footnote \thanks
+    {\LARGE \@title \par}%
+    \vskip 1.5em%
+    {\large
+      \lineskip .5em%
+      \begin{tabular}[t]{c}%
+        \@author
+      \end{tabular}\par}%
+    \vskip 1em%
+    {\large \@date}%
+  \end{center}%
+  \par
+  \vskip 1.5em}
+\makeatother
+
+% Document metadata
+\title{%
+\LARGE{\textbf{CILA}} \\
+    \Large{Language specification}
+}
+\author{Jakub Mendyk}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Grammar}
+
+\newcommand{\tok}[1]{\textbf{#1}}
+\newcommand{\nt}[1]{\textlangle#1\textrangle}
+
+\newcommand{\Program}{\nt{program}}
+\newcommand{\Instruction}{\nt{instruction}}
+
+\newcommand{\LogicExpr}{\nt{logic\_expr}}
+\newcommand{\LogicSummand}{\nt{logic\_summand}}
+\newcommand{\LogicMultiplicand}{\nt{logic\_multiplicand}}
+\newcommand{\RelExpr}{\nt{rel\_expr}}
+\newcommand{\RelOp}{\nt{rel\_op}}
+
+\newcommand{\ArithExpr}{\nt{arith\_expr}}
+\newcommand{\ArithSummand}{\nt{arith\_summand}}
+\newcommand{\ArithMultiplicand}{\nt{arith\_multiplicand}}
+\newcommand{\SimpleExpr}{\nt{simple\_expr}}
+\newcommand{\SummOp}{\nt{summ\_op}}
+\newcommand{\MultOp}{\nt{mult\_op}}
+
+\begin{tabularx}{\linewidth}{rcl}
+integer &::=& \textit{digit} | integer \textit{digit} \\  
+keyword &::=& if | then | else | fi | while | do | od | div | mod | or | and | not \\
+alfanum &::=& \textit{letter} | alfanum \textit{letter} | alfanum \textit{digit} \\
+ident   &::=& alfanum (not in keyword) \\
+\midrule
+\Program &::=& \Instruction | \Program ; \Instruction \\
+\Instruction &::=& \tok{ident} := \ArithExpr \\
+&|& \tok{if} \LogicExpr \tok{then} \Program \tok{fi} \\
+&|& \tok{if} \LogicExpr \tok{then} \Program \tok{else} \Program \tok{fi} \\
+&|& \tok{while} \LogicExpr \tok{do} \Program \tok{od} \\
+\midrule
+\LogicExpr &::=& \LogicSummand | \LogicExpr \textbf{or} \LogicSummand \\
+\LogicSummand &::=& \LogicMultiplicand | \LogicSummand \textbf{and} \LogicMultiplicand \\
+\LogicMultiplicand &::=& \RelExpr | \textbf{not} \LogicMultiplicand \\
+\RelExpr &::=& \ArithExpr \RelOp \ArithExpr | ( \LogicExpr ) \\
+\RelOp &::=& \tok{$=$} | \tok{$<$} | \tok{$>$} | \tok{$<=$} | \tok{$>=$} | \tok{$<>$} \\
+\midrule
+\ArithExpr &::=& \ArithSummand | \ArithExpr \SummOp \ArithSummand \\
+\ArithSummand &::=& \ArithMultiplicand | \ArithSummand \MultOp \ArithMultiplicand \\
+\ArithMultiplicand &::=& \SimpleExpr | \SimpleExpr \tok{\^} \ArithMultiplicand \\
+\SimpleExpr &::=& ( \ArithExpr ) | \tok{integer} | \tok{ident} \\
+\SummOp &::=& \tok{+} | \tok{--} \\
+\MultOp &::=& \tok{*} | \tok{div} | \tok{mod}
+\end{tabularx}
+
+\end{document}
