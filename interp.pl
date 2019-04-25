@@ -129,11 +129,11 @@ term_expansion(lrec(Pred, Sngl, Sep, Combine), [
 parser(Ast) --> program(Ast).
 
 program(Ast) --> instruction(Ast1), program1([Ast1|X]-X, Ast).
-program1(H-T, Ast) --> [';'], !, instruction(Ast2), { T = [Ast2|T1] }, program1(H-T1, Ast).
+program1(H-T, Ast) --> instruction(Ast2), !, { T = [Ast2|T1] }, program1(H-T1, Ast).
 program1(H-T, Ast) --> [], { T = [], Ast = H }.
 
-instruction(ident(I, Content) := Ast) --> [ident(I)], ['['], arith_expr(Content), [']'], [':='], !, arith_expr(Ast).
-instruction(ident(I) := Ast) --> [ident(I), ':='], !, arith_expr(Ast).
+instruction(ident(I, Content) := Ast) --> [ident(I)], ['['], arith_expr(Content), [']'], [':='], !, arith_expr(Ast), [';'].
+instruction(ident(I) := Ast) --> [ident(I), ':='], !, arith_expr(Ast), [';'].
 instruction(if(LAst, TAst)) --> [keyword(if)], logic_expr(LAst), [keyword(then)], program(TAst), [keyword(fi)], !.
 instruction(if(LAst, TAst, EAst)) --> [keyword(if)], logic_expr(LAst), [keyword(then)], program(TAst), [keyword(else)], program(EAst), [keyword(fi)].
 instruction(while(LAst, BAst)) --> [keyword(while)], !, logic_expr(LAst), [keyword(do)], program(BAst), [keyword(od)].

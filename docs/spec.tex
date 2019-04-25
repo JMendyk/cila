@@ -122,8 +122,8 @@ keyword &::=& if | then | else | fi | while | do | od | div | mod | or | and | n
 alfanum &::=& \textit{letter} | alfanum \textit{letter} | alfanum \textit{digit} \\
 ident   &::=& alfanum (not in keyword) \\
 \midrule
-\Program &::=& \Instruction | \Program ; \Instruction \\
-\Instruction &::=& \tok{ident} := \ArithExpr \\
+\Program &::=& \Instruction | \Program \Instruction \\
+\Instruction &::=& \tok{ident} := \ArithExpr ; \\
 &|& \tok{if} \LogicExpr \tok{then} \Program \tok{fi} \\
 &|& \tok{if} \LogicExpr \tok{then} \Program \tok{else} \Program \tok{fi} \\
 &|& \tok{while} \LogicExpr \tok{do} \Program \tok{od} \\

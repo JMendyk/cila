@@ -6,17 +6,18 @@ isPrime[1] := 0;
 loop := 2;
 while N >= loop do
     isPrime[loop] := 1;
-    loop := loop + 1
-od;
+    loop := loop + 1;
+od
 
 prime := 2;
+
 while N >= prime do
     next := 2 * prime;
     if isPrime[prime] = 1 then
         while N >= next do
             isPrime[next] := 0;
-            next := next + prime
+            next := next + prime;
         od
-    fi;
-    prime := prime + 1
+    fi
+    prime := prime + 1;
 od
