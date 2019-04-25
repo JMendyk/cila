@@ -112,7 +112,7 @@ lex_file(Path, PTokens) :-
 
 term_expansion(lrec(Pred, Sngl, Sep, Combine), [
     Base --> (Single1, One), 
-    One --> ([Sep], !, Single2, OneComb),
+    One --> (Sep, !, Single2, OneComb),
     Ground --> []
 ]) :-
     Base =.. [Pred, Ast],
@@ -126,11 +126,11 @@ term_expansion(lrec(Pred, Sngl, Sep, Combine), [
     OneComb =.. [Pred1, CombExpr, Ast],
     Ground =.. [Pred1, Ast, Ast].
 
+
 parser(Ast) --> program(Ast).
 
-program(Ast) --> instruction(Ast1), program1([Ast1|X]-X, Ast).
-program1(H-T, Ast) --> instruction(Ast2), !, { T = [Ast2|T1] }, program1(H-T1, Ast).
-program1(H-T, Ast) --> [], { T = [], Ast = H }.
+program([Ast|Asts]) --> instruction(Ast), !, program(Asts).
+program([]) --> [].
 
 instruction(ident(I, Content) := Ast) --> [ident(I)], ['['], arith_expr(Content), [']'], [':='], !, arith_expr(Ast), [';'].
 instruction(ident(I) := Ast) --> [ident(I), ':='], !, arith_expr(Ast), [';'].
@@ -140,17 +140,9 @@ instruction(while(LAst, BAst)) --> [keyword(while)], !, logic_expr(LAst), [keywo
 
 % Logic
 
-lrec(logic_expr, logic_summand, keyword(or), logic_op(or)).
+lrec(logic_expr, logic_summand, [keyword(or)], logic_op(or)).
 
-% logic_expr(Ast) --> logic_summand(Ast1), logic_expr1(Ast1, Ast).
-% logic_expr1(Ast1, Ast) --> [keyword(or)], !, logic_summand(Ast2), logic_expr1(logic_op(or, Ast1, Ast2), Ast).
-% logic_expr1(Ast, Ast) --> [].
-
-% lrec(logic_summand, logic_multiplicand, keyword(and), logic_op(and)).
-
-logic_summand(Ast) --> logic_multiplicand(Ast1), logic_summand1(Ast1, Ast).
-logic_summand1(Ast1, Ast) --> [keyword(and)], !, logic_multiplicand(Ast2), logic_summand1(logic_op(and, Ast1, Ast2), Ast).
-logic_summand1(Ast, Ast) --> [].
+lrec(logic_summand, logic_multiplicand, [keyword(and)], logic_op(and)).
 
 logic_multiplicand(logic_op(not, Ast)) --> [keyword(not)], !, logic_multiplicand(Ast).
 logic_multiplicand(Ast) --> rel_expr(Ast).
@@ -162,17 +154,9 @@ rel_op(X) --> [X], { member(X, ['=', '<', '>', '<=', '>=', '<>']), !}.
 
 % Arithmetic
 
-% lrec(arith_expr, arith_summand, summ_op(Op), arith_op(Op)).
+lrec(arith_expr, arith_summand, summ_op(Op), arith_op(Op)).
 
-arith_expr(Ast) --> arith_summand(Ast1), arith_expr1(Ast1, Ast).
-arith_expr1(Ast1, Ast) --> summ_op(Op), !, arith_summand(Ast2), arith_expr1(arith_op(Op, Ast1, Ast2), Ast).
-arith_expr1(Ast, Ast) --> [].
-
-% lrec(arith_summand, arith_multiplicand, mult_op(Op), arith_op(Op)).
-
-arith_summand(Ast) --> arith_multiplicand(Ast1), arith_summand1(Ast1, Ast).
-arith_summand1(Ast1, Ast) --> mult_op(Op), !, arith_multiplicand(Ast2), arith_summand1(arith_op(Op, Ast1, Ast2), Ast).
-arith_summand1(Ast, Ast) --> [].
+lrec(arith_summand, arith_multiplicand, mult_op(Op), arith_op(Op)).
 
 arith_multiplicand(arith_op(^, Ast1, Ast2)) --> simple_expr(Ast1), ['^'], !, arith_multiplicand(Ast2).
 arith_multiplicand(Ast) --> simple_expr(Ast).
