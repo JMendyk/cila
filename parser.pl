@@ -20,7 +20,6 @@ parser(Ast) --> program(Ast).
 program([Ast|Asts]) --> instruction(Ast), !, program(Asts).
 program([]) --> [].
 
-instruction(Ast) --> arith_expr(Ast), !.
 instruction(ident(I, Content) := Ast) --> [ident(I)], ['['], arith_expr(Content), [']'], [':='], !, arith_expr(Ast), [';'].
 instruction(ident(I) := Ast) --> [ident(I), ':='], !, arith_expr(Ast), [';'].
 instruction(if(LAst, TAst)) --> [keyword(if)], logic_expr(LAst), [keyword(then)], program(TAst), [keyword(fi)], !.
