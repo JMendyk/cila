@@ -1,6 +1,6 @@
 (* Sieve of Eratosthenes implemented in CILA *)
 
-N := 53;
+N := 1500;
 
 isPrime[1] := 0;
 loop := 2;
