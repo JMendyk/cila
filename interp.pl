@@ -28,21 +28,21 @@ evalExpr(arith_op(Op, Arg1, Arg2), Mem, Val) :-
 evalLog(logic_op(and, Arg1, Arg2), Mem, Val) :-
     evalLog(Arg1, Mem, Val1),
     evalLog(Arg2, Mem, Val2),
-    (Val1 = true, Val2 = true) -> Val = true; Val = false.
+    (Val1 = true, Val2 = true) -> (Val = true, !); Val = false.
 evalLog(logic_op(or, Arg1, Arg2), Mem, Val) :-
     evalLog(Arg1, Mem, Val1),
     evalLog(Arg2, Mem, Val2),
-    (Val1 = true; Val2 = true) -> Val = true; Val = false.
+    (Val1 = true; Val2 = true) -> (Val = true, !); Val = false.
 evalLog(logic_op(not, Arg), Mem, Val) :-
     evalLog(Arg, Mem, Val),
-    (Val = true) -> Val = false; Val = true.
+    (Val = true) -> (Val = false, !); Val = true.
 
 evalLog(rel_op(Op, Arg1, Arg2), Mem, Val) :-
     evalExpr(Arg1, Mem, Val1),
     evalExpr(Arg2, Mem, Val2),
     call(Op, Val1, Val2) -> Val = true; Val = false.
 
-evalProg([], Mem, Mem).
+evalProg([], Mem, Mem) :- !.
 evalProg([S|Ss], Mem, MemOut) :-
     evalProg(S, Mem, Mem1),
     evalProg(Ss, Mem1, MemOut).
@@ -53,10 +53,6 @@ evalProg(ident(I, Idx) := Expr, Mem, MemOut) :-
     evalExpr(Expr, Mem, Val),
     atom_concat(I, IdxVal, NewI),
     store_ident(Mem, NewI, Val, MemOut).
-
-% evalProg(ident("x") := _, Mem, _) :-
-%     writeln(Mem),
-%     fail.
 
 evalProg(ident(I) := Expr, Mem, MemOut) :-
     evalExpr(Expr, Mem, Val),
