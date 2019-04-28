@@ -76,7 +76,7 @@ bytecode(ident(I), InVs, InVs) --> { offset_of(I, InVs, Offset) }, [reach(Offset
 
 bytecode(ident(I) := Expr, InVs, InVs) --> { member(I, InVs) }, !, bytecode(Expr, InVs, InVs), { offset_of(I, InVs, Offset) }, [throw(r0, Offset)].
 
-bytecode(ident(I) := Expr, InVs, [I|InVs]) --> !, bytecode(Expr, InVs, InVs), [push(r0)], { write("Defining variable "), writeln(I) }.
+bytecode(ident(I) := Expr, InVs, [I|InVs]) --> !, bytecode(Expr, InVs, InVs), [push(r0)].
 
 offset_of(I, [I|_], 0) :- !.
 offset_of(I, [_|Vs], N) :-
