@@ -1,3 +1,8 @@
+optional(Match, _) -->
+    Match, !.
+optional(_, Default) -->
+    Default, !.
+
 term_expansion(lrec(Pred, Sngl, Sep, Combine), [
     Base --> (Single1, One), 
     One --> (Sep, !, Single2, OneComb),
@@ -22,9 +27,15 @@ program([]) --> [].
 
 instruction(ident(I, Content) := Ast) --> [ident(I)], ['['], arith_expr(Content), [']'], [':='], !, arith_expr(Ast), [';'].
 instruction(ident(I) := Ast) --> [ident(I), ':='], !, arith_expr(Ast), [';'].
-instruction(if(LAst, TAst)) --> [keyword(if)], logic_expr(LAst), [keyword(then)], program(TAst), [keyword(fi)], !.
-instruction(if(LAst, TAst, EAst)) --> [keyword(if)], logic_expr(LAst), [keyword(then)], program(TAst), [keyword(else)], program(EAst), [keyword(fi)].
+instruction(Ast) --> if_expr(Ast), !.
 instruction(while(LAst, BAst)) --> [keyword(while)], !, logic_expr(LAst), [keyword(do)], program(BAst), [keyword(od)].
+
+if_expr(Ast) -->
+    [keyword(if)], logic_expr(Cond),
+    [keyword(then)], program(Then),
+    optional(([keyword(else)], program(Else), { Ast = if(Cond, Then, Else) }), 
+    { Ast = if(Cond, Then) }),
+    [keyword(fi)].
 
 % Logic
 
