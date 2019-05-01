@@ -8,7 +8,7 @@ encode_int(X, [B1, B2, B3, B4]) :-
 
 encode_int(X, [B1, B2, B3, B4]) :-
     integer(B1), integer(B2), integer(B3), integer(B4),
-    X is (B1 << 24) + (B2 << 16) + (B3 << 8) + B4.
+    X is (B1 << 24) \/ (B2 << 16) \/ (B3 << 8) \/ B4.
 
 
 get_head(T, T, T).
@@ -27,6 +27,39 @@ put(Key, Val, [(Other, _)|Tail]) :-
     Key \= Other,
     put(Key, Val, Tail).
 
+% store_jump_target(Offset, In, Out, Idx) :-
+%     nonvar(In),
+%     writeln((Offset, In, Out, Idx)),
+%     !,
+%     Out = In,
+%     index_of_offset(1, Offset, In, Idx).
+
+index_of_offset(N, Offset, [Offset|_], N) :- !.
+index_of_offset(N, Offset, [_|Offsets], NOut) :-
+    N1 is N + 1,
+    index_of_offset(N1, Offset, Offsets, NOut).
+
+store_jump_target(Offset, In, Out, Idx) :-
+    store_jump_target(1, Offset, In, Out, Idx).
+
+store_jump_target(N, Offset, [], [Offset], N) :- !.
+store_jump_target(N, Offset, [Offset|Xs], [Offset|Xs], N) :- !.
+store_jump_target(N, Offset, [Off|Xs], [Off|Ys], NOut) :-
+    N1 is N + 1,
+    store_jump_target(N1, Offset, Xs, Ys, NOut).
+
+store_offset(Label, Offset1, Lookup, JumpMapping, RenumberedOffset, Asm) -->
+    { var(JumpMapping), ! },
+    { find(Label, Lookup, LabelOffset) },
+    compile(Offset1, Lookup, JumpMapping1, Asm), { store_jump_target(LabelOffset, JumpMapping1, JumpMapping, RenumberedOffset) }.
+
+store_offset(Label, Offset1, Lookup, JumpMapping, RenumberedOffset, Asm) -->
+    { nonvar(JumpMapping), ! },
+    { store_jump_target(LabelOffset, JumpMapping1
+        , JumpMapping, RenumberedOffset) },
+    { find(Label, Lookup, LabelOffset) },
+    compile(Offset1, Lookup, JumpMapping1, Asm).
+
 :- op(1200, xfx, --->).
 
 extended_pos(Pos0, Pos) :-
@@ -34,8 +67,8 @@ extended_pos(Pos0, Pos) :-
 term_expansion(
         compile(Cons, Asm, Arity) ---> Body,
         L,
-        (compile(Offset, Lookup, Cons) --> (advance(Offset, Lookup, Arity, Offset1), NewBody)), L0) :-
-        cbody((compile(Offset1, Lookup, Asm)), Body, NewBody),
+        (compile(Offset, Lookup, JumpMapping, Cons) --> (advance(Offset, Lookup, Arity, Offset1), NewBody)), L0) :-
+        cbody((compile(Offset1, Lookup, JumpMapping, Asm)), Body, NewBody),
         extended_pos(L, L0).
 cbody(Extra, (B, Bs), (B, Rest)) :- !, cbody(Extra, Bs, Rest).
 cbody(Extra, B, (B, Extra)).
@@ -67,17 +100,15 @@ compile([0xA|Asm], Asm, 1) ---> [or], !.
 % not - pop top value from stack and put negated on stack
 compile([0xB|Asm], Asm, 1) ---> [not], !.
 % jump(label) - jump to given label
-compile(Offset, Lookup, [0x10, LabelOffset|Asm]) --> advance(Offset, Lookup, 5, Offset1), [jump(Label)], !,
-    { find(Label, Lookup, LabelOffset) }, 
-    compile(Offset1, Lookup, Asm).
+compile(Offset, Lookup, JumpMapping, [0x10, RenumberedOffset|Asm]) --> advance(Offset, Lookup, 5, Offset1), [jump(Label)], !,
+    store_offset(Label, Offset1, Lookup, JumpMapping, RenumberedOffset, Asm).
 % jz(label) - pop value from stack and if it was zero jump to given label
-compile(Offset, Lookup, [0x11, LabelOffset|Asm]) --> advance(Offset, Lookup, 5, Offset1), [jz(Label)], !,
-    { find(Label, Lookup, LabelOffset) }, 
-    compile(Offset1, Lookup, Asm).
+compile(Offset, Lookup, JumpMapping, [0x11, RenumberedOffset|Asm]) --> advance(Offset, Lookup, 5, Offset1), [jz(Label)], !,
+    store_offset(Label, Offset1, Lookup, JumpMapping, RenumberedOffset, Asm).
 % jgtz(label) - pop value from stack and if it was greater or equal zero jump to given label
-compile(Offset, Lookup, [0x12, LabelOffset|Asm]) --> advance(Offset, Lookup, 5, Offset1), [jgtz(Label)], !,
-    { find(Label, Lookup, LabelOffset) }, 
-    compile(Offset1, Lookup, Asm).
+compile(Offset, Lookup, JumpMapping, [0x12, RenumberedOffset|Asm]) --> advance(Offset, Lookup, 5, Offset1), [jgtz(Label)], !, 
+    store_offset(Label, Offset1, Lookup, JumpMapping, RenumberedOffset, Asm).
+
 % equal - pop two values from stack and push 1 if values were equal (otherwise 0)
 compile([0xC|Asm], Asm, 1) ---> [equal], !.
 % lt - pop two values from stack and push 1 if top was less than second (otherwise 0)
@@ -85,7 +116,7 @@ compile([0xD|Asm], Asm, 1) ---> [lt], !.
 % leq - pop two values from stack and push 1 if top was less than or eqaul to second (otherwise 0)
 compile([0xE|Asm], Asm, 1) ---> [leq], !.
 
-compile(Offset, Lookup, []) --> advance(Offset, Lookup, 0, Offset), [].
+compile(Offset, Lookup, [], []) --> advance(Offset, Lookup, 0, Offset), [].
 
 expand([0x1, B1, B2, B3, B4|Asm]) --> [0x1, X], !, { encode_int(X, [B1, B2, B3, B4]) }, expand(Asm).
 expand([0x2, B1, B2, B3, B4|Asm]) --> [0x2, X], !, { encode_int(X, [B1, B2, B3, B4]) }, expand(Asm).
@@ -108,12 +139,13 @@ expand([X|Asm]) --> [X], !, expand(Asm).
 
 expand([]) --> [].
 
-compile((Bytecode, _), Compiled) :-
-    phrase(compile(0, _, CompBytecode), Bytecode),
+compile((Bytecode, _), (Compiled, JumpMapping)) :-
+    phrase(compile(0, _, JumpMapping, CompBytecode), Bytecode),
     phrase(expand(Expanded), CompBytecode),
     Compiled = Expanded.
 
-decompile(Compiled, Bytecode) :-
+decompile((Compiled, JumpMapping), Bytecode) :-
     Expanded = Compiled,
     phrase(expand(Expanded), CompBytecode),
-    phrase(compile(0, lookup, CompBytecode), Bytecode).
+    writeln(CompBytecode),
+    phrase(compile(0, lookup, JumpMapping, CompBytecode), Bytecode).

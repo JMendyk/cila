@@ -54,51 +54,74 @@ decomp(X, X).
 
 % load_int(X) 0x1    load(X) 0x2    store(X) 0x3    add 0x4    sub 0x5    mult 0x6    div 0x7    mod 0x8    and 0x9    or 0xA    not 0xB    jump(LabelOffset) 0x10    jz(LabelOffset) 0x11    jgtz(LabelOffset) 0x12    equal 0xC    lt 0xDleq 0xE
 
+:- dynamic(jump_table/1).
+
 % load_int(X) - load X on stack
-vm(Inits, (S, M), Out) --> [0x1, B1, B2, B3, B4], { encode_int(X, [B1, B2, B3, B4]) }, !, vm(Inits, ([X|S], M), Out).
+vm((S, M), Out) --> [0x1, B1, B2, B3, B4], { encode_int(X, [B1, B2, B3, B4]) }, !, vm(([X|S], M), Out).
 % load(X) - load variable X's value on stack
-vm(Inits, (S, M), Out) --> [0x2, B1, B2, B3, B4], { encode_int(X, [B1, B2, B3, B4]) }, !, { lookup(X, M, V) }, vm(Inits, ([V|S], M), Out).
+vm((S, M), Out) --> [0x2, B1, B2, B3, B4], { encode_int(X, [B1, B2, B3, B4]) }, !, { lookup(X, M, V) }, vm(([V|S], M), Out).
 % store(X) - pop value from stack and store it in variable X
-vm(Inits, ([V|S], M), Out) --> [0x3, B1, B2, B3, B4], { encode_int(X, [B1, B2, B3, B4]) }, !, { assign(X, V, M, M1) }, vm(Inits, (S, M1), Out).
+vm(([V|S], M), Out) --> [0x3, B1, B2, B3, B4], { encode_int(X, [B1, B2, B3, B4]) }, !, { assign(X, V, M, M1) }, vm((S, M1), Out).
 % add, sub, mult, div, mod - pop top values from stack, perform proper operation and put result on stack
-vm(Inits, ([Arg1, Arg2|S], M), Out) --> [0x4], !, { Ret is Arg1 + Arg2 }, vm(Inits, ([Ret|S], M), Out).
-vm(Inits, ([Arg1, Arg2|S], M), Out) --> [0x5], !, { Ret is Arg1 - Arg2 }, vm(Inits, ([Ret|S], M), Out).
-vm(Inits, ([Arg1, Arg2|S], M), Out) --> [0x6], !, { Ret is Arg1 * Arg2 }, vm(Inits, ([Ret|S], M), Out).
-vm(Inits, ([Arg1, Arg2|S], M), Out) --> [0x7], !, { Ret is Arg1 div Arg2 }, vm(Inits, ([Ret|S], M), Out).
-vm(Inits, ([Arg1, Arg2|S], M), Out) --> [0x8], !, { Ret is Arg1 mod Arg2 }, vm(Inits, ([Ret|S], M), Out).
+vm(([Arg1, Arg2|S], M), Out) --> [0x4], !, { Ret is Arg1 + Arg2 }, vm(([Ret|S], M), Out).
+vm(([Arg1, Arg2|S], M), Out) --> [0x5], !, { Ret is Arg1 - Arg2 }, vm(([Ret|S], M), Out).
+vm(([Arg1, Arg2|S], M), Out) --> [0x6], !, { Ret is Arg1 * Arg2 }, vm(([Ret|S], M), Out).
+vm(([Arg1, Arg2|S], M), Out) --> [0x7], !, { Ret is Arg1 div Arg2 }, vm(([Ret|S], M), Out).
+vm(([Arg1, Arg2|S], M), Out) --> [0x8], !, { Ret is Arg1 mod Arg2 }, vm(([Ret|S], M), Out).
 % and, or - pop two values from stack, perform proper operation and put result on stack
-vm(Inits, ([1, 1|S], M), Out) --> [0x9], !, vm(Inits, ([1|S], M), Out).
-vm(Inits, ([_, _|S], M), Out) --> [0x9], !, vm(Inits, ([0|S], M), Out).
-vm(Inits, ([0, 0|S], M), Out) --> [0xA], !, vm(Inits, ([0|S], M), Out).
-vm(Inits, ([_, _|S], M), Out) --> [0xA], !, vm(Inits, ([1|S], M), Out).
+vm(([1, 1|S], M), Out) --> [0x9], !, vm(([1|S], M), Out).
+vm(([_, _|S], M), Out) --> [0x9], !, vm(([0|S], M), Out).
+vm(([0, 0|S], M), Out) --> [0xA], !, vm(([0|S], M), Out).
+vm(([_, _|S], M), Out) --> [0xA], !, vm(([1|S], M), Out).
 % not - pop top value from stack and put negated on stack
-vm(Inits, ([1|S], M), Out) --> [0xB], !, vm(Inits, ([0|S], M), Out).
-vm(Inits, ([0|S], M), Out) --> [0xB], !, vm(Inits, ([1|S], M), Out).
+vm(([1|S], M), Out) --> [0xB], !, vm(([0|S], M), Out).
+vm(([0|S], M), Out) --> [0xB], !, vm(([1|S], M), Out).
 % jump(label) - jump to given label
-vm(Inits, In, Out) --> [0x10, B1, B2, B3, B4], { encode_int(Offset, [B1, B2, B3, B4]) }, !, { Offset1 is Offset + 1, nth1(Offset1, Inits, Bytecode), phrase(vm(Inits, In, Out), Bytecode, _) }.
+vm(In, Out) --> [0x10, B1, B2, B3, B4], { encode_int(Offset, [B1, B2, B3, B4]) }, !, { jump_table(Inits), arg(Offset, Inits, Bytecode), vm(In, Out, Bytecode, _) }.
 % jz(label) - pop value from stack and if it was zero jump to given label
-vm(Inits, ([0|S], M), Out) --> [0x11, B1, B2, B3, B4], { encode_int(Offset, [B1, B2, B3, B4]) }, !, { Offset1 is Offset + 1, nth1(Offset1, Inits, Bytecode), phrase(vm(Inits, (S, M), Out), Bytecode, _) }.
-vm(Inits, ([_|S], M), Out) --> [0x11, B1, B2, B3, B4], { encode_int(_, [B1, B2, B3, B4]) }, !, vm(Inits, (S, M), Out).
+vm(([0|S], M), Out) --> [0x11, B1, B2, B3, B4], { encode_int(Offset, [B1, B2, B3, B4]) }, !, { jump_table(Inits), arg(Offset, Inits, Bytecode), vm((S, M), Out, Bytecode, _) }.
+vm(([_|S], M), Out) --> [0x11, B1, B2, B3, B4], { encode_int(_, [B1, B2, B3, B4]) }, !, vm((S, M), Out).
 % jgtz(label) - pop value from stack and if it was greater or equal zero jump to given label
-vm(Inits, ([V|S], M), Out) --> [0x12, B1, B2, B3, B4], { encode_int(Offset, [B1, B2, B3, B4]) }, { V >= 0}, !, { Offset1 is Offset + 1, nth1(Offset1, Inits, Bytecode), phrase(vm(Inits, (S, M), Out), Bytecode, _) }.
-vm(Inits, ([_|S], M), Out) --> [0x12, B1, B2, B3, B4], { encode_int(_, [B1, B2, B3, B4]) }, !, vm(Inits, (S, M), Out).
+vm(([V|S], M), Out) --> [0x12, B1, B2, B3, B4], { encode_int(Offset, [B1, B2, B3, B4]) }, { V >= 0}, !, { jump_table(Inits), arg(Offset, Inits, Bytecode), vm((S, M), Out, Bytecode, _) }.
+vm(([_|S], M), Out) --> [0x12, B1, B2, B3, B4], { encode_int(_, [B1, B2, B3, B4]) }, !, vm((S, M), Out).
 % equal - pop two values from stack and push 1 if values were equal (otherwise 0)
-vm(Inits, ([X, X|S], M), Out) --> [0xC], !, vm(Inits, ([1|S], M), Out).
-vm(Inits, ([_, _|S], M), Out) --> [0xC], !, vm(Inits, ([0|S], M), Out).
+vm(([X, X|S], M), Out) --> [0xC], !, vm(([1|S], M), Out).
+vm(([_, _|S], M), Out) --> [0xC], !, vm(([0|S], M), Out).
 % lt - pop two values from stack and push 1 if top was less than second (otherwise 0)
-vm(Inits, ([X, Y|S], M), Out) --> [0xD], { X < Y }, !, vm(Inits, ([1|S], M), Out).
-vm(Inits, ([_, _|S], M), Out) --> [0xD], !, vm(Inits, ([0|S], M), Out).
+vm(([X, Y|S], M), Out) --> [0xD], { X < Y }, !, vm(([1|S], M), Out).
+vm(([_, _|S], M), Out) --> [0xD], !, vm(([0|S], M), Out).
 % leq - pop two values from stack and push 1 if top was less than or eqaul to second (otherwise 0)
-vm(Inits, ([X, Y|S], M), Out) --> [0xE], { X =< Y }, !, vm(Inits, ([1|S], M), Out).
-vm(Inits, ([_, _|S], M), Out) --> [0xE], !, vm(Inits, ([0|S], M), Out).
+vm(([X, Y|S], M), Out) --> [0xE], { X =< Y }, !, vm(([1|S], M), Out).
+vm(([_, _|S], M), Out) --> [0xE], !, vm(([0|S], M), Out).
 
-vm(_, Memory, Memory) --> [].
+vm(Memory, Memory) --> [].
 
-prefixes([X|Xs], [[X|Xs]|Prefixes]) :-
-    prefixes(Xs, Prefixes).
-prefixes([], [[]]).
+% prefixes([X|Xs], [[X|Xs]|Prefixes]) :-
+%     prefixes(Xs, Prefixes).
+% prefixes([], [[]]).
 
-run(Bytecode, (S, M)) :-
-    prefixes(Bytecode, Inits),
-    % writeln(Inits),
-    phrase(vm(Inits, ([], []), (S, M)), Bytecode, _).
+make_jump_table(Xs, JumpMapping, Inits) :-
+    make_jump_table(0, Xs, JumpMapping, Inits).
+
+make_jump_table(N, [X|Xs], [N|JM], [[X|Xs]|Inits]) :-
+    !,
+    N1 is N + 1,
+    make_jump_table(N1, Xs, JM, Inits).
+
+make_jump_table(N, [_|Xs], JM, Inits) :-
+    !,
+    N1 is N + 1,
+    make_jump_table(N1, Xs, JM, Inits).
+
+make_jump_table(N, [], [N], [[]]) :- !.
+
+make_jump_table(_, _, [], []).
+
+
+run((Bytecode, JumpMapping), (S, M)) :-
+    make_jump_table(Bytecode, JumpMapping, Inits),
+    Faster =.. [array|Inits],
+    asserta(jump_table(Faster)),
+    !,
+    phrase(vm(([], []), (S, M)), Bytecode, _),
+    retract(jump_table(Faster)).
