@@ -37,7 +37,23 @@ evalLog(logic_op(not, Arg), Mem, Val) :-
     evalLog(Arg, Mem, Val),
     (Val = true) -> (Val = false, !); Val = true.
 
+evalLog(rel_op(=, Arg1, Arg2), Mem, Val) :- !,
+    evalExpr(Arg1, Mem, Val1),
+    evalExpr(Arg2, Mem, Val2),
+    Val1 == Val2 -> Val = true; Val = false.
+
+evalLog(rel_op(<>, Arg1, Arg2), Mem, Val) :- !,
+    evalExpr(Arg1, Mem, Val1),
+    evalExpr(Arg2, Mem, Val2),
+    (\+ Val1 == Val2) -> Val = true; Val = false.
+
+evalLog(rel_op(<=, Arg1, Arg2), Mem, Val) :- !,
+    evalExpr(Arg1, Mem, Val1),
+    evalExpr(Arg2, Mem, Val2),
+    Val1 =< Val2 -> Val = true; Val = false.
+
 evalLog(rel_op(Op, Arg1, Arg2), Mem, Val) :-
+    \+ member(Op, ['<=', '<>', '=']), % Don't know why this is required...
     evalExpr(Arg1, Mem, Val1),
     evalExpr(Arg2, Mem, Val2),
     call(Op, Val1, Val2) -> Val = true; Val = false.
@@ -67,13 +83,9 @@ evalProg(if(Cond, Then, Else), Mem, MemOut) :-
     CondVal = true -> evalProg(Then, Mem, MemOut); 
                       evalProg(Else, Mem, MemOut).
 
-evalProg(while(Cond, _), Mem, Mem) :-
-    evalLog(Cond, Mem, false), !.
-
 evalProg(while(Cond, Body), Mem, MemOut) :-
-    evalLog(Cond, Mem, true),
-    evalProg(Body, Mem, Mem1),
-    evalProg(while(Cond, Body), Mem1, MemOut).
+    evalLog(Cond, Mem, CondVal),
+    CondVal = true -> (evalProg(Body, Mem, Mem1), evalProg(while(Cond, Body), Mem1, MemOut)); MemOut = Mem.
 
 emptyInterpMemory([]).
 
