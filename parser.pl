@@ -33,17 +33,24 @@ parser(Ast) --> program(Ast).
 program([Ast|Asts]) --> instruction(Ast), !, program(Asts).
 program([]) --> [].
 
-instruction(ident(I, Content) := Ast) --> ident(I), char('['), arith_expr(Content), char(']'), char(':='), !, arith_expr(Ast), char(';').
-instruction(ident(I) := Ast) --> ident(I), char(':='), !, arith_expr(Ast), char(';').
-instruction(Ast) --> if_expr(Ast), !.
-instruction(while(LAst, BAst)) --> keyword(while), !, logic_expr(LAst), keyword(do), program(BAst), keyword(od).
+instruction(Ast) --> assign_inst(Ast), !.
+instruction(Ast) --> if_inst(Ast), !.
+instruction(Ast) --> while_inst(Ast), !.
 
-if_expr(Ast) -->
+assign_inst(Head := Ast) --> 
+    ident(I), 
+    optional((char('['), arith_expr(Sub), char(']'), { Head = ident(I, Sub) }), { Head = ident(I) }), 
+    char(':='),
+    arith_expr(Ast), char(';').
+
+if_inst(Ast) -->
     keyword(if), logic_expr(Cond),
     keyword(then), program(Then),
     optional((keyword(else), program(Else), { Ast = if(Cond, Then, Else) }),
     { Ast = if(Cond, Then) }),
     keyword(fi).
+
+while_inst(while(Cond, Body)) --> keyword(while), !, logic_expr(Cond), keyword(do), program(Body), keyword(od).
 
 % Logic
 
