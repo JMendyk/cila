@@ -70,12 +70,12 @@ keyword1((Col, Line), [K|Acc], Out) -->
     keyword1((Col1, Line), Acc, Out).
 keyword1(Out, [], Out) --> [].
 
-others((Col, Line), [W|Tokens], Out) -->
+others((Col, Line), [char(W, (Col, Line))|Tokens], Out) -->
     [W1, W2], 
     { atomic_list_concat([W1, W2], W), member(W, ['<=', '>=', '<>', ':=']), ! },
     { Col1 is Col + 2 },
     lexer((Col1, Line), Tokens, Out).
-others((Col, Line), [W|Tokens], Out) -->
+others((Col, Line), [char(W, (Col, Line))|Tokens], Out) -->
     [W], { member(W, ['+', '-', '*', '^', '=', '<', '>', ';', '(', ')', '[', ']']), ! },
     { Col1 is Col + 1 },
     lexer((Col1, Line), Tokens, Out).
@@ -91,9 +91,10 @@ whitespace((Col, Line), Tokens, Out) -->
 
 pretty_tokens([], []).
 pretty_tokens([comment(_, _)|Ts], Ps) :- pretty_tokens(Ts, Ps), !.
-pretty_tokens([integer(I, _)|Ts], [integer(I)|Ps]) :- pretty_tokens(Ts, Ps), !.
-pretty_tokens([ident(I, _)|Ts], [ident(I)|Ps]) :- pretty_tokens(Ts, Ps), !.
-pretty_tokens([keyword(I, _)|Ts], [keyword(I)|Ps]) :- pretty_tokens(Ts, Ps), !.
+% pretty_tokens([integer(I, _)|Ts], [integer(I)|Ps]) :- pretty_tokens(Ts, Ps), !.
+% pretty_tokens([ident(I, _)|Ts], [ident(I)|Ps]) :- pretty_tokens(Ts, Ps), !.
+% pretty_tokens([keyword(I, _)|Ts], [keyword(I)|Ps]) :- pretty_tokens(Ts, Ps), !.
+% pretty_tokens([char(C, _)|Ts], [char(C)|Ps]) :- pretty_tokens(Ts, Ps).
 pretty_tokens([X|Ts], [X|Ps]) :- pretty_tokens(Ts, Ps).
 
 lex(Str, PTokens) :-

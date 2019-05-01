@@ -19,10 +19,14 @@ term_expansion(lrec(Pred, Sngl, Sep, Combine), [
     OneComb =.. [Pred1, CombExpr, Ast],
     Ground =.. [Pred1, Ast, Ast].
 
-keyword(K) --> [keyword(K)].
-char(C) --> [C].
-ident(I) --> [ident(I)].
-integer(I) --> [integer(I)].
+keyword(K) --> [keyword(K, _)].
+keyword(K, CL) --> [keyword(K, CL)].
+char(C) --> [char(C, _)].
+char(C, CL) --> [char(C, CL)].
+ident(I) --> [ident(I, _)].
+ident(I, CL) --> [ident(I, CL)].
+integer(I) --> [integer(I, _)].
+integer(I, CL) --> [integer(I, CL)].
 
 parser(Ast) --> program(Ast).
 
