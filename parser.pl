@@ -3,7 +3,7 @@ optional(Match, _) -->
 optional(_, Default) -->
     Default, !.
 
-term_expansion(lrec(Pred, Sngl, Sep, Combine), [
+term_expansion(left_recursion(Pred, Sngl, Sep, Combine), [
     Base --> (Single1, One), 
     One --> (Sep, !, Single2, OneComb),
     Ground --> []
@@ -54,23 +54,24 @@ while_inst(while(Cond, Body)) --> keyword(while), !, logic_expr(Cond), keyword(d
 
 % Logic
 
-lrec(logic_expr, logic_summand, keyword(or), logic_op(or)).
+left_recursion(logic_expr, logic_summand, keyword(or), logic_op(or)).
 
-lrec(logic_summand, logic_multiplicand, keyword(and), logic_op(and)).
+left_recursion(logic_summand, logic_multiplicand, keyword(and), logic_op(and)).
 
 logic_multiplicand(logic_op(not, Ast)) --> keyword(not), !, logic_multiplicand(Ast).
 logic_multiplicand(Ast) --> rel_expr(Ast).
 
 rel_expr(Ast) --> char('('), !, logic_expr(Ast), char(')').
+
 rel_expr(rel_op(Op, Ast1, Ast2)) --> arith_expr(Ast1), rel_op(Op), arith_expr(Ast2).
 
 rel_op(X) --> char(X), { member(X, ['=', '<', '>', '<=', '>=', '<>']), !}.
 
 % Arithmetic
 
-lrec(arith_expr, arith_summand, summ_op(Op), arith_op(Op)).
+left_recursion(arith_expr, arith_summand, summ_op(Op), arith_op(Op)).
 
-lrec(arith_summand, arith_multiplicand, mult_op(Op), arith_op(Op)).
+left_recursion(arith_summand, arith_multiplicand, mult_op(Op), arith_op(Op)).
 
 arith_multiplicand(arith_op(^, Ast1, Ast2)) --> simple_expr(Ast1), char('^'), !, arith_multiplicand(Ast2).
 arith_multiplicand(Ast) --> simple_expr(Ast).
@@ -83,8 +84,8 @@ simple_expr(ident(I)) --> ident(I), !.
 summ_op(X) --> char(X), { member(X, ['+', '-']), ! }.
 % mult_op(X) --> char(X), { member(X, ['*', keyword(div), keyword(mod)]), ! }.
 mult_op('*') --> char('*'), !.
-mult_op('div') --> keyword('div'), !.
-mult_op('mod') --> keyword('mod').
+mult_op(div) --> keyword(div), !.
+mult_op(mod) --> keyword(mod).
 
 % parse_tokens(Tokens, Ast) :-
 %     phrase(parser(Ast), Tokens).
