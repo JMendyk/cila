@@ -4,12 +4,18 @@
 ident_value([(Var, Val)|_], Var, Val) :- !.
 ident_value([(_, _)|Mem], Var, Val) :-
     ident_value(Mem, Var, Val).
-ident_value([], _, 0).
+ident_value([], Var, _) :-
+    domain_error("Undefined variable", Var),
+    fail.
 
-store_ident([(Var, _)|Mem], Var, Val, [(Var, Val)|Mem]) :- !.
-store_ident([(K, V)|Mem], Var, Val, [(K, V)|Mem1]) :-
-    store_ident(Mem, Var, Val, Mem1).
-store_ident([], Var, Val, [(Var, Val)]).
+update_ident([(Var, _)|Mem], Var, Val, [(Var, Val)|Mem]) :- !.
+update_ident([(K, V)|Mem], Var, Val, [(K, V)|Mem1]) :-
+    update_ident(Mem, Var, Val, Mem1).
+update_ident([], Var, _, _) :-
+    domain_error("Undefined variable", Var),
+    fail.
+
+new_ident(Xs, Var, Val, [(Var, Val)|Xs]).
 
 evalExpr(integer(N), _, N).
 evalExpr(ident(N), Mem, Val) :-
@@ -68,11 +74,15 @@ evalProg(ident(I, Idx) := Expr, Mem, MemOut) :-
     evalExpr(Idx, Mem, IdxVal),
     evalExpr(Expr, Mem, Val),
     atom_concat(I, IdxVal, NewI),
-    store_ident(Mem, NewI, Val, MemOut).
+    update_ident(Mem, NewI, Val, MemOut).
+
+evalProg(defn(I, Expr), Mem, MemOut) :-
+    evalExpr(Expr, Mem, Val),
+    new_ident(Mem, I, Val, MemOut).
 
 evalProg(ident(I) := Expr, Mem, MemOut) :-
     evalExpr(Expr, Mem, Val),
-    store_ident(Mem, I, Val, MemOut).
+    update_ident(Mem, I, Val, MemOut).
 
 evalProg(if(Cond, Then), Mem, MemOut) :-
     evalLog(Cond, Mem, CondVal),

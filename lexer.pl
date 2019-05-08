@@ -56,7 +56,7 @@ ident1((Col, Line), [I|Acc], Out) -->
     ident1((Col1, Line), Acc, Out).
 ident1(Out, [], Out) --> [].
 
-keywordK(Atom) :- member(Atom, ['if', 'then', 'else', 'fi', 'while', 'do', 'od', 'div', 'mod', 'or', 'and', 'not']), !.
+keywordK(Atom) :- member(Atom, ['if', 'then', 'else', 'fi', 'while', 'do', 'od', 'div', 'mod', 'or', 'and', 'not', 'let']), !.
 
 keyword((Col, Line), [keyword(Keyword, (Col, Line))|Tokens], Out) -->
     [K], { letter(K) },

@@ -27,15 +27,21 @@ ident(I) --> [ident(I, _)].
 ident(I, CL) --> [ident(I, CL)].
 integer(I) --> [integer(I, _)].
 integer(I, CL) --> [integer(I, CL)].
-
 parser(Ast) --> program(Ast).
 
 program([Ast|Asts]) --> instruction(Ast), !, program(Asts).
 program([]) --> [].
 
+instruction(Ast) --> definition(Ast), !.
 instruction(Ast) --> assign_inst(Ast), !.
 instruction(Ast) --> if_inst(Ast), !.
 instruction(Ast) --> while_inst(Ast), !.
+
+definition(defn(I, Ast)) -->
+    keyword(let),
+    ident(I),
+    char(':='),
+    arith_expr(Ast), char(';').
 
 assign_inst(Head := Ast) --> 
     ident(I), 

@@ -118,12 +118,13 @@
 
 \begin{tabularx}{\linewidth}{rcl}
 integer &::=& \textit{digit} | integer \textit{digit} \\  
-keyword &::=& if | then | else | fi | while | do | od | div | mod | or | and | not \\
+keyword &::=& if | then | else | fi | while | do | od | div | mod | or | and | not | let \\
 alfanum &::=& \textit{letter} | alfanum \textit{letter} | alfanum \textit{digit} \\
 ident   &::=& alfanum (not in keyword) \\
 \midrule
 \Program &::=& \Instruction | \Program \Instruction \\
-\Instruction &::=& \tok{ident} := \ArithExpr ; \\
+\Instruction &::=& \tok{let} \tok{ident} := \ArithExpr ; \\
+&|& \tok{ident} := \ArithExpr ; \\
 &|& \tok{if} \LogicExpr \tok{then} \Program \tok{fi} \\
 &|& \tok{if} \LogicExpr \tok{then} \Program \tok{else} \Program \tok{fi} \\
 &|& \tok{while} \LogicExpr \tok{do} \Program \tok{od} \\
