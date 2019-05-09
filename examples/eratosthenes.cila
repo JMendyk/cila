@@ -1,18 +1,18 @@
 (* Sieve of Eratosthenes implemented in CILA *)
 
-N := 1500;
+let N := 100;
 
-isPrime[1] := 0;
-loop := 2;
+let isPrime[N+1] := { 0 };
+let loop := 2;
 while N >= loop do
     isPrime[loop] := 1;
     loop := loop + 1;
 od
 
-prime := 2;
+let prime := 2;
 
 while N >= prime do
-    next := 2 * prime;
+    let next := 2 * prime;
     if isPrime[prime] = 1 then
         while N >= next do
             isPrime[next] := 0;

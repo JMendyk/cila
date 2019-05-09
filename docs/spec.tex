@@ -124,7 +124,9 @@ ident   &::=& alfanum (not in keyword) \\
 \midrule
 \Program &::=& \Instruction | \Program \Instruction \\
 \Instruction &::=& \tok{let} \tok{ident} := \ArithExpr ; \\
+&|& \tok{let} \tok{ident}[\ArithExpr] := \ArithExpr ; \\
 &|& \tok{ident} := \ArithExpr ; \\
+&|& \tok{ident}[\ArithExpr] := \{ \ArithExpr, ... \} ; \\
 &|& \tok{if} \LogicExpr \tok{then} \Program \tok{fi} \\
 &|& \tok{if} \LogicExpr \tok{then} \Program \tok{else} \Program \tok{fi} \\
 &|& \tok{while} \LogicExpr \tok{do} \Program \tok{od} \\
@@ -138,7 +140,7 @@ ident   &::=& alfanum (not in keyword) \\
 \ArithExpr &::=& \ArithSummand | \ArithExpr \SummOp \ArithSummand \\
 \ArithSummand &::=& \ArithMultiplicand | \ArithSummand \MultOp \ArithMultiplicand \\
 \ArithMultiplicand &::=& \SimpleExpr | \SimpleExpr \tok{\^} \ArithMultiplicand \\
-\SimpleExpr &::=& ( \ArithExpr ) | \tok{integer} | \tok{ident} \\
+\SimpleExpr &::=& ( \ArithExpr ) | \tok{integer} | \tok{ident} | \tok{ident}[\ArithExpr] \\
 \SummOp &::=& \tok{+} | \tok{--} \\
 \MultOp &::=& \tok{*} | \tok{div} | \tok{mod}
 \end{tabularx}

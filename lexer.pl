@@ -76,7 +76,7 @@ others((Col, Line), [char(W, (Col, Line))|Tokens], Out) -->
     { Col1 is Col + 2 },
     lexer((Col1, Line), Tokens, Out).
 others((Col, Line), [char(W, (Col, Line))|Tokens], Out) -->
-    [W], { member(W, ['+', '-', '*', '^', '=', '<', '>', ';', '(', ')', '[', ']']), ! },
+    [W], { member(W, ['+', '-', '*', '^', '=', '<', '>', ';', '(', ')', '[', ']', '{', '}', ',']), ! },
     { Col1 is Col + 1 },
     lexer((Col1, Line), Tokens, Out).
 
@@ -91,11 +91,15 @@ whitespace((Col, Line), Tokens, Out) -->
 
 pretty_tokens([], []).
 pretty_tokens([comment(_, _)|Ts], Ps) :- pretty_tokens(Ts, Ps), !.
-% pretty_tokens([integer(I, _)|Ts], [integer(I)|Ps]) :- pretty_tokens(Ts, Ps), !.
-% pretty_tokens([ident(I, _)|Ts], [ident(I)|Ps]) :- pretty_tokens(Ts, Ps), !.
-% pretty_tokens([keyword(I, _)|Ts], [keyword(I)|Ps]) :- pretty_tokens(Ts, Ps), !.
-% pretty_tokens([char(C, _)|Ts], [char(C)|Ps]) :- pretty_tokens(Ts, Ps).
 pretty_tokens([X|Ts], [X|Ps]) :- pretty_tokens(Ts, Ps).
+
+readable_tokens([], []).
+readable_tokens([comment(_, _)|Ts], Ps) :- readable_tokens(Ts, Ps), !.
+readable_tokens([integer(I, _)|Ts], [integer(I)|Ps]) :- readable_tokens(Ts, Ps), !.
+readable_tokens([ident(I, _)|Ts], [ident(I)|Ps]) :- readable_tokens(Ts, Ps), !.
+readable_tokens([keyword(I, _)|Ts], [keyword(I)|Ps]) :- readable_tokens(Ts, Ps), !.
+readable_tokens([char(C, _)|Ts], [char(C)|Ps]) :- readable_tokens(Ts, Ps), !.
+readable_tokens([X|Ts], [X|Ps]) :- readable_tokens(Ts, Ps).
 
 lex(Str, PTokens) :-
     string_chars(Str, Ls),

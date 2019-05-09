@@ -1,7 +1,62 @@
+% Optional and sequence sourced from http://www.swi-prolog.org/pldoc/doc/_SWI_/library/dcg/high_order.pl
+
+/*  Part of SWI-Prolog
+
+    Author:        Jan Wielemaker
+    E-mail:        J.Wielemaker@vu.nl
+    WWW:           http://www.swi-prolog.org
+    Copyright (c)  2018, VU University Amsterdam
+                         CWI, Amsterdam
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+
+    1. Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in
+       the documentation and/or other materials provided with the
+       distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+    FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+    COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+    ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+    */
+
 optional(Match, _) -->
     Match, !.
 optional(_, Default) -->
     Default, !.
+
+sequence(Start, OnElem, OnSep, End, List) -->
+    Start,
+    sequence_(List, OnElem, OnSep),
+    End, !.
+
+sequence_([H|T], P, Sep) -->
+    call(P, H),
+    (   {T == []}
+    ->  []
+    ;   Sep
+    ->  !, sequence_(T, P, Sep)
+    ;   {T = []}
+    ).
+sequence_([], _, _) -->
+    [].
+
+% End of sourced predicated from dcg/high_order
 
 term_expansion(left_recursion(Pred, Sngl, Sep, Combine), [
     Base --> (Single1, One), 
@@ -37,15 +92,31 @@ instruction(Ast) --> assign_inst(Ast), !.
 instruction(Ast) --> if_inst(Ast), !.
 instruction(Ast) --> while_inst(Ast), !.
 
-definition(defn(I, Ast)) -->
+definition(def_value(I, Ast)) -->
     keyword(let),
     ident(I),
     char(':='),
+    !,
     arith_expr(Ast), char(';').
 
-assign_inst(Head := Ast) --> 
+definition(def_array(I, Length, Ast)) -->
+    keyword(let),
+    ident(I),
+    char('['), arith_expr(Length), char(']'),
+    char(':='), array_expr(Ast), 
+    char(';').
+
+array_expr(Values) -->
+    sequence(char('{'), arith_expr, char(','), char('}'), Values).
+
+assign_inst(assignment(I, Ast)) --> 
     ident(I), 
-    optional((char('['), arith_expr(Sub), char(']'), { Head = ident(I, Sub) }), { Head = ident(I) }), 
+    char(':='),
+    arith_expr(Ast), char(';').
+
+assign_inst(assignment(I, Sub, Ast)) --> 
+    ident(I), 
+    char('['), arith_expr(Sub), char(']'),
     char(':='),
     arith_expr(Ast), char(';').
 
