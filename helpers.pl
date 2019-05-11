@@ -49,3 +49,17 @@ parallelEval([], _, _, []).
 parallelEval([E|Es], EvalPred, Mem, [V|Vs]) :-
     call(EvalPred, E, Mem, V),
     parallelEval(Es, EvalPred, Mem, Vs).
+
+sequentialEval([], _, Env, Env) :- !.
+sequentialEval([S|Ss], EvalPred, Env, EnvOut) :-
+    call(EvalPred, S, Env, Env1),
+    sequentialEval(Ss, EvalPred, Env1, EnvOut).
+
+% Evaluate Second argument if first is true, otherwise third argument
+evalBranch(true, EvalPred, Then, _, Mem, MemOut) :-
+    !,
+    call(EvalPred, Then, Mem, MemOut).
+
+evalBranch(false, EvalPred, _, Else, Mem, MemOut) :-
+    !,
+    call(EvalPred, Else, Mem, MemOut).
