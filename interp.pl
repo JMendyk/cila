@@ -1,5 +1,6 @@
 :- consult(lexer).
 :- consult(parser).
+:- consult(helpers).
 
 ident_value([(Var, Val)|_], Var, Val) :- !.
 ident_value([(_, _)|Mem], Var, Val) :-
@@ -17,55 +18,13 @@ update_ident([], Var, _, _) :-
 
 new_ident(Xs, Var, Val, [(Var, Val)|Xs]).
 
-% repeatingList(list with ? elements, +)
-% predicate for lists that are a finite prefix of infinite concatenation of second list
-
-repeatingList(Ls, Ts) :-
-    repeatingList(Ls, Ts, Ts).
-
-repeatingList([T|Ls], [T|Ts], FullTs) :-
-    !,
-    repeatingList(Ls, Ts, FullTs).
-
-repeatingList(Ls, [], FullTs) :-
-    !,
-    repeatingList(Ls, FullTs, FullTs).
-
-repeatingList([], _, _).
-
-% chainedEval(list with +, +, +, -)
-
-parallelEval([], _, _, []).
-
-parallelEval([E|Es], EvalPred, Mem, [V|Vs]) :-
-    call(EvalPred, E, Mem, V),
-    parallelEval(Es, EvalPred, Mem, Vs).
-
-set_array_elem([], _, _, _) :-
-    !,
-    fail.
-
-set_array_elem([_|Vs], 0, V, [V|Vs]) :- !.
-set_array_elem([V1|Vs], N, V, [V1|Vs1]) :-
-    N1 is N - 1,
-    set_array_elem(Vs, N1, V, Vs1).
-
-get_array_elem([], _, _) :-
-    !,
-    fail.
-
-get_array_elem([V|_], 0, V) :- !.
-get_array_elem([_|Vs], N, V) :-
-    N1 is N - 1,
-    get_array_elem(Vs, N1, V).
-
 evalExpr(integer(N), _, N).
 evalExpr(ident(N), Mem, Val) :-
     ident_value(Mem, N, Val).
 evalExpr(ident(I, SubExpr), Mem, Val) :-
     evalExpr(SubExpr, Mem, Sub),
-    ident_value(Mem, I, array(Length, Vs)),
-    (get_array_elem(Vs, Sub, Val); throw(("Array", I, Length, Sub, "too short!"))),
+    ident_value(Mem, I, Arr),
+    catch(arr_get(Arr, Sub, Val), "List too short!", throw(("Array", I, Sub, "too short!"))),
     !.
 
 evalExpr(arith_op(Op, Arg1, Arg2), Mem, Val) :-
@@ -136,10 +95,10 @@ evalProg(assignment(I, Expr), Mem, MemOut) :-
 
 evalProg(assignment(I, SubExpr, ValExpr), Mem, MemOut) :-
     parallelEval([ValExpr, SubExpr], evalExpr, Mem, [Val, Sub]),
-    ident_value(Mem, I, array(Length, Vs)),
-    (set_array_elem(Vs, Sub, Val, NewVs); throw(("Array", I, Length, Sub, "too short!"))),
+    ident_value(Mem, I, Arr),
+    catch(arr_set(Arr, Sub, Val, NewArr), "List too short!", throw(("Array", I, Sub, "too short!"))),
     !,
-    update_ident(Mem, I, array(Length, NewVs), MemOut).
+    update_ident(Mem, I, NewArr, MemOut).
 
 evalProg(if(Cond, Then), Mem, MemOut) :-
     evalLog(Cond, Mem, CondVal),
