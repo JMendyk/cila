@@ -18,45 +18,37 @@ evalExpr(arith_op(Op, Arg1, Arg2), Env, Val) :-
     Expr =.. [Op, Val1, Val2],
     call(is, Val, Expr).
 
-evalLog(logic_op(and, Arg1, Arg2), Env, Val) :-
+evalLog(logic_op(and, Arg1, Arg2), Env, Val) :- !,
     evalLog(Arg1, Env, Val1),
     evalLog(Arg2, Env, Val2),
-    ((Val1 = true, Val2 = true) -> (Val = true, !); Val = false),
-    !.
-evalLog(logic_op(or, Arg1, Arg2), Env, Val) :-
+    ((Val1 = true, Val2 = true) -> (Val = true, !); Val = false).
+evalLog(logic_op(or, Arg1, Arg2), Env, Val) :- !,
     evalLog(Arg1, Env, Val1),
     evalLog(Arg2, Env, Val2),
-    ((Val1 = true; Val2 = true) -> (Val = true, !); Val = false),
-    !.
+    ((Val1 = true; Val2 = true) -> (Val = true, !); Val = false).
 evalLog(logic_op(not, Arg), Env, Val) :-
     evalLog(Arg, Env, Val),
-    ((Val = true) -> (Val = false, !); Val = true),
-    !.
+    ((Val = true) -> (Val = false, !); Val = true).
 
 evalLog(rel_op(=, Arg1, Arg2), Env, Val) :- !,
     evalExpr(Arg1, Env, Val1),
     evalExpr(Arg2, Env, Val2),
-    (Val1 == Val2 -> (Val = true, !); Val = false),
-    !.
+    (Val1 == Val2 -> (Val = true, !); Val = false).
 
 evalLog(rel_op(<>, Arg1, Arg2), Env, Val) :- !,
     evalExpr(Arg1, Env, Val1),
     evalExpr(Arg2, Env, Val2),
-    ((\+ Val1 == Val2) -> (Val = true, !); Val = false),
-    !.
+    ((\+ Val1 == Val2) -> (Val = true, !); Val = false).
 
 evalLog(rel_op(<=, Arg1, Arg2), Env, Val) :- !,
     evalExpr(Arg1, Env, Val1),
     evalExpr(Arg2, Env, Val2),
-    (Val1 =< Val2 -> (Val = true, !); Val = false),
-    !.
+    (Val1 =< Val2 -> (Val = true, !); Val = false).
 
 evalLog(rel_op(Op, Arg1, Arg2), Env, Val) :-
-    \+ member(Op, ['<=', '<>', '=']), % Don't know why this is required...
     evalExpr(Arg1, Env, Val1),
     evalExpr(Arg2, Env, Val2),
-    (call(Op, Val1, Val2) -> (Val = true, !); Val = false),
-    !.
+    (call(Op, Val1, Val2) -> (Val = true, !); Val = false).
 
 evalProg(Ls, Env, EnvOut) :-
     is_list(Ls),
