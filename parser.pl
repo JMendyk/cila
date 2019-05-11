@@ -99,11 +99,12 @@ definition(def_value(I, Ast)) -->
     !,
     arith_expr(Ast), char(';').
 
-definition(def_array(I, Length, Ast)) -->
+definition(def_array(I, Length, Values)) -->
     keyword(let),
     ident(I),
-    char('['), arith_expr(Length), char(']'),
-    char(':='), array_expr(Ast), 
+    char('['), optional(arith_expr(Length), []), char(']'),
+    char(':='), array_expr(Values),
+    { nonvar(Length); (length(Values, Length1), Length = integer(Length1)) },
     char(';').
 
 array_expr(Values) -->

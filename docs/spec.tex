@@ -98,23 +98,26 @@
 \section{Grammar}
 
 \newcommand{\tok}[1]{\textbf{#1}}
-\newcommand{\nt}[1]{\textlangle#1\textrangle}
+% \newcommand{\nt}[1]{#1}
 
-\newcommand{\Program}{\nt{program}}
-\newcommand{\Instruction}{\nt{instruction}}
+\newcommand{\Program}{program }
+\newcommand{\Instruction}{instruction }
 
-\newcommand{\LogicExpr}{\nt{logic\_expr}}
-\newcommand{\LogicSummand}{\nt{logic\_summand}}
-\newcommand{\LogicMultiplicand}{\nt{logic\_multiplicand}}
-\newcommand{\RelExpr}{\nt{rel\_expr}}
-\newcommand{\RelOp}{\nt{rel\_op}}
+\newcommand{\LogicExpr}{logic\textsubscript{expr} }
+\newcommand{\LogicSummand}{logic\textsubscript{summand} }
+\newcommand{\LogicMultiplicand}{logic\textsubscript{multiplicand} }
+\newcommand{\RelExpr}{rel\textsubscript{expr} }
+\newcommand{\RelOp}{rel\textsubscript{op} }
 
-\newcommand{\ArithExpr}{\nt{arith\_expr}}
-\newcommand{\ArithSummand}{\nt{arith\_summand}}
-\newcommand{\ArithMultiplicand}{\nt{arith\_multiplicand}}
-\newcommand{\SimpleExpr}{\nt{simple\_expr}}
-\newcommand{\SummOp}{\nt{summ\_op}}
-\newcommand{\MultOp}{\nt{mult\_op}}
+\newcommand{\ArithExpr}{arith\textsubscript{expr} }
+\newcommand{\ArithSummand}{arith\textsubscript{summand} }
+\newcommand{\ArithMultiplicand}{arith\textsubscript{multiplicand} }
+\newcommand{\SimpleExpr}{simple\textsubscript{expr} }
+\newcommand{\SummOp}{summ\textsubscript{op} }
+\newcommand{\MultOp}{mult\textsubscript{op} }
+
+\newcommand{\Any}[1]{#1*}
+\newcommand{\Some}[1]{#1+}
 
 \begin{tabularx}{\linewidth}{rcl}
 integer &::=& \textit{digit} | integer \textit{digit} \\  
@@ -124,21 +127,21 @@ ident   &::=& alfanum (not in keyword) \\
 \midrule
 \Program &::=& \Instruction | \Program \Instruction \\
 \Instruction &::=& \tok{let} \tok{ident} := \ArithExpr ; \\
-&|& \tok{let} \tok{ident}[\ArithExpr] := \ArithExpr ; \\
+&|& \tok{let} \tok{ident}[\Any{\ArithExpr}] := \ArithExpr ; \\
 &|& \tok{ident} := \ArithExpr ; \\
 &|& \tok{ident}[\ArithExpr] := \{ \ArithExpr, ... \} ; \\
 &|& \tok{if} \LogicExpr \tok{then} \Program \tok{fi} \\
 &|& \tok{if} \LogicExpr \tok{then} \Program \tok{else} \Program \tok{fi} \\
 &|& \tok{while} \LogicExpr \tok{do} \Program \tok{od} \\
 \midrule
-\LogicExpr &::=& \LogicSummand | \LogicExpr \textbf{or} \LogicSummand \\
-\LogicSummand &::=& \LogicMultiplicand | \LogicSummand \textbf{and} \LogicMultiplicand \\
+\LogicExpr &::=& \Any{(\LogicExpr \textbf{or})} \LogicSummand \\
+\LogicSummand &::=& \Any{(\LogicSummand \textbf{and})} \LogicMultiplicand \\
 \LogicMultiplicand &::=& \RelExpr | \textbf{not} \LogicMultiplicand \\
 \RelExpr &::=& \ArithExpr \RelOp \ArithExpr | ( \LogicExpr ) \\
 \RelOp &::=& \tok{$=$} | \tok{$<$} | \tok{$>$} | \tok{$<=$} | \tok{$>=$} | \tok{$<>$} \\
 \midrule
-\ArithExpr &::=& \ArithSummand | \ArithExpr \SummOp \ArithSummand \\
-\ArithSummand &::=& \ArithMultiplicand | \ArithSummand \MultOp \ArithMultiplicand \\
+\ArithExpr &::=& \Any{(\ArithExpr \SummOp)} \ArithSummand \\
+\ArithSummand &::=& \Any{(\ArithSummand \MultOp)} \ArithMultiplicand \\
 \ArithMultiplicand &::=& \SimpleExpr | \SimpleExpr \tok{\^} \ArithMultiplicand \\
 \SimpleExpr &::=& ( \ArithExpr ) | \tok{integer} | \tok{ident} | \tok{ident}[\ArithExpr] \\
 \SummOp &::=& \tok{+} | \tok{--} \\

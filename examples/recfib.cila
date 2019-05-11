@@ -1,0 +1,7 @@
+N := 10;
+
+fib := fun begin
+
+end
+
+fib10 := fib;

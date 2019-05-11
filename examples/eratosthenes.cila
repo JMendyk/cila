@@ -2,12 +2,8 @@
 
 let N := 100;
 
-let isPrime[N+1] := { 0 };
-let loop := 2;
-while N >= loop do
-    isPrime[loop] := 1;
-    loop := loop + 1;
-od
+let isPrime[N+1] := { 1 };
+isPrime[1] := 0;
 
 let prime := 2;
 
