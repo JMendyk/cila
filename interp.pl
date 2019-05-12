@@ -68,6 +68,9 @@ evalProg(def(I, array(LengthExpr, ArrayExprs)), Mem, MemOut) :-
     repeatingList(Val, ArrayVals),
     createVar(Mem, MemOut, (I, array(Length, Val))).
 
+evalProg(def(I, fun(ArgNames, Body)), Mem, MemOut) :-
+    createVar(Mem, MemOut, (I, closure(ArgNames, Body))).
+
 evalProg(assignment(I, Expr), Mem, MemOut) :-
     evalExpr(Expr, Mem, Val),
     setVar(Mem, MemOut, (I, Val)).
@@ -96,6 +99,19 @@ evalProg(while(Cond, Body), Mem, MemOut) :-
     evalLog(Cond, Mem1, CondVal),
     evalBranch(CondVal, evalProg, [Body, while(Cond, Body)], [], Mem1, Mem2),
     destroyScope(Mem2, MemOut).
+
+evalProg(call(Fun, ArgExprs), Mem, MemOut) :-
+    parallelEval(ArgExprs, evalExpr, Mem, Args),
+    getVar(Mem, (Fun, closure(ArgNames, Body))),
+    same_length(Args, ArgNames),
+    callArgs(ArgNames, Args, CallArgs),
+    createCall(Mem, Mem1, CallArgs),
+    evalProg(Body, Mem1, _),
+    destroyCall(Mem1, Mem),
+    MemOut = Mem.
+
+callArgs(Names, Values, CallArgs) :-
+    zip(Names, Values, CallArgs).
 
 
 % interp(Str, Val) :-

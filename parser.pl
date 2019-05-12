@@ -84,6 +84,13 @@ integer(I) --> [integer(I, _)].
 integer(I, CL) --> [integer(I, CL)].
 parser(Ast) --> program(Ast).
 
+array_expr(array(Length, Values)) -->
+    optional((char('['), optional(arith_expr(Length), []), char(']')), []),
+    sequence(char('{'), arith_expr, char(','), char('}'), Values),
+    { nonvar(Length); (length(Values, Length1), Length = integer(Length1)) }.
+
+identName(ident(I), I).
+
 program([Ast|Asts]) --> instruction(Ast), !, program(Asts).
 program([]) --> [].
 
@@ -91,6 +98,7 @@ instruction(Ast) --> definition(Ast), !.
 instruction(Ast) --> assign_inst(Ast), !.
 instruction(Ast) --> if_inst(Ast), !.
 instruction(Ast) --> while_inst(Ast), !.
+instruction(Ast) --> call_inst(Ast), !.
 
 value(arith(Ast)) --> arith_expr(Ast).
 value(Ast) --> array_expr(Ast).
@@ -98,6 +106,12 @@ value(boolean(Ast)) --> logic_expr(Ast),
     { atomic_list_concat(["Attempted to introduce boolean value.\n", Ast, "Boolean expressions are not supported as values."], Message),
     writeln(Message),
     throw(Message) }.
+value(fun(ArgNames, Body)) --> 
+    keyword(fun),
+    !,
+    sequence(char('('), ident, char(','), char(')'), ArgNames),
+    program(Body),
+    keyword(nuf).
 
 definition(def(I, Value)) -->
     keyword(let),
@@ -106,11 +120,6 @@ definition(def(I, Value)) -->
     !,
     value(Value),
     char(';').
-
-array_expr(array(Length, Values)) -->
-    optional((char('['), optional(arith_expr(Length), []), char(']')), []),
-    sequence(char('{'), arith_expr, char(','), char('}'), Values),
-    { nonvar(Length); (length(Values, Length1), Length = integer(Length1)) }.
 
 assign_inst(assignment(I, Ast)) --> 
     ident(I), 
@@ -131,6 +140,12 @@ if_inst(Ast) -->
     keyword(fi).
 
 while_inst(while(Cond, Body)) --> keyword(while), !, logic_expr(Cond), keyword(do), program(Body), keyword(od).
+
+call_inst(call(I, Args)) -->
+    ident(I),
+    sequence(char('('), arith_expr, char(','), char(')'), Args),
+    !,
+    char(';').
 
 % Logic
 

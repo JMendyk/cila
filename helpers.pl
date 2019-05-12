@@ -1,3 +1,8 @@
+
+zip([], [], []) :- !.
+zip([X|Xs], [Y|Ys], [(X, Y)|XYs]) :-
+    zip(Xs, Ys, XYs).
+
 % Array representation helpers:
 
 arr_set(array(Length, _), Idx, _, _) :-

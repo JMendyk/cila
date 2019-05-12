@@ -1,7 +1,5 @@
-N := 10;
+let fib := fun (n) 
+    let a := n + 2;
+nuf;
 
-fib := fun begin
-
-end
-
-fib10 := fib;
+fib(10);

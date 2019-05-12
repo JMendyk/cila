@@ -87,6 +87,21 @@ destroyScope_([scope_boundary|Mem], Mem) :- !.
 destroyScope_([_|Mem], Mem1) :-
     destroyScope_(Mem, Mem1).
 
+
+createCall(env(GM, LocalMem, _), env(GM, LocalMem1, false), Args) :-
+    append(Args, [call_scope|LocalMem], LocalMem1).
+    % writeln(LocalMem1).
+
+destroyCall(env(GM, LocalMem, _), env(GM, LocalMem1, IsInGlobal)) :-
+    destroyCall_(LocalMem, LocalMem1),
+    LocalMem1 = [] -> IsInGlobal = true; IsInGlobal = false,
+    !.
+
+destroyCall_([], []) :- !.
+destroyCall_([call_scope|Mem], Mem) :- !.
+destroyCall_([_|Mem], Mem1) :-
+    destroyCall_(Mem, Mem1).
+
 % withBlockScope(Goal) -->
 %     insertBlockBound,
 %     Goal,
