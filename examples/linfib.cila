@@ -1,7 +1,7 @@
-let N := 500;
+let N := 10;
 
 let i := 1;
-let p[] := { 0, 1 };
+let p := { 0, 1 };
 
 let result := 0;
 

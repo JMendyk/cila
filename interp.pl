@@ -55,11 +55,13 @@ evalProg(Ls, Env, EnvOut) :-
     !,
     sequentialEval(Ls, evalProg, Env, EnvOut).
 
-evalProg(def_value(I, Expr), Mem, MemOut) :-
+evalProg(def(I, arith(Expr)), Mem, MemOut) :-
+    !,
     evalExpr(Expr, Mem, Val),
     createVar(Mem, MemOut, (I, Val)).
 
-evalProg(def_array(I, LengthExpr, ArrayExprs), Mem, MemOut) :-
+evalProg(def(I, array(LengthExpr, ArrayExprs)), Mem, MemOut) :-
+    !,
     evalExpr(LengthExpr, Mem, Length),
     parallelEval(ArrayExprs, evalExpr, Mem, ArrayVals),
     length(Val, Length),
