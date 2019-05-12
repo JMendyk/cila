@@ -92,18 +92,34 @@ instruction(Ast) --> assign_inst(Ast), !.
 instruction(Ast) --> if_inst(Ast), !.
 instruction(Ast) --> while_inst(Ast), !.
 
-definition(def_value(I, Ast)) -->
+value(arith(Ast)) --> arith_expr(Ast).
+value(array(Ast)) --> array_expr(Ast).
+value(boolean(Ast)) --> logic_expr(Ast).
+
+constructValueDefintion(I, arith(Ast), def_value(I, Ast)) :- !.
+constructValueDefintion(I, array(_), _) :-
+    atomic_list_concat(["Attempted to define variable ", I, " as array value.\n", "Array expressions are not supported as values."], Message),
+    writeln(Message),
+    throw(Message).
+constructValueDefintion(I, boolean(_), _) :-
+    atomic_list_concat(["Attempted to define variable ", I, " as boolean value.\n", "Boolean expressions are not supported as values."], Message),
+    writeln(Message),
+    throw(Message).
+
+definition(Def) -->
     keyword(let),
     ident(I),
     char(':='),
     !,
-    arith_expr(Ast), char(';').
+    value(Value),
+    char(';'),
+    { constructValueDefintion(I, Value, Def) }.
 
 definition(def_array(I, Length, Values)) -->
     keyword(let),
     ident(I),
-    char('['), optional(arith_expr(Length), []), char(']'),
-    char(':='), array_expr(Values),
+    char('['), optional(value(arith(Length)), []), char(']'),
+    char(':='), value(array(Values)),
     { nonvar(Length); (length(Values, Length1), Length = integer(Length1)) },
     char(';').
 
@@ -113,22 +129,22 @@ array_expr(Values) -->
 assign_inst(assignment(I, Ast)) --> 
     ident(I), 
     char(':='),
-    arith_expr(Ast), char(';').
+    value(arith(Ast)), char(';').
 
 assign_inst(assignment(I, Sub, Ast)) --> 
     ident(I), 
-    char('['), arith_expr(Sub), char(']'),
+    char('['), value(arith(Sub)), char(']'),
     char(':='),
-    arith_expr(Ast), char(';').
+    value(arith(Ast)), char(';').
 
 if_inst(Ast) -->
-    keyword(if), logic_expr(Cond),
+    keyword(if), value(boolean(Cond)),
     keyword(then), program(Then),
     optional((keyword(else), program(Else), { Ast = if(Cond, Then, Else) }),
     { Ast = if(Cond, Then) }),
     keyword(fi).
 
-while_inst(while(Cond, Body)) --> keyword(while), !, logic_expr(Cond), keyword(do), program(Body), keyword(od).
+while_inst(while(Cond, Body)) --> keyword(while), !, value(boolean(Cond)), keyword(do), program(Body), keyword(od).
 
 % Logic
 
@@ -141,7 +157,7 @@ logic_multiplicand(Ast) --> rel_expr(Ast).
 
 rel_expr(Ast) --> char('('), !, logic_expr(Ast), char(')').
 
-rel_expr(rel_op(Op, Ast1, Ast2)) --> arith_expr(Ast1), rel_op(Op), arith_expr(Ast2).
+rel_expr(rel_op(Op, Ast1, Ast2)) --> value(arith(Ast1)), rel_op(Op), value(arith(Ast2)).
 
 rel_op(X) --> char(X), { member(X, ['=', '<', '>', '<=', '>=', '<>']), !}.
 
@@ -154,9 +170,9 @@ left_recursion(arith_summand, arith_multiplicand, mult_op(Op), arith_op(Op)).
 arith_multiplicand(arith_op(^, Ast1, Ast2)) --> simple_expr(Ast1), char('^'), !, arith_multiplicand(Ast2).
 arith_multiplicand(Ast) --> simple_expr(Ast).
 
-simple_expr(Ast) --> char('('), !, arith_expr(Ast), char(')').
+simple_expr(Ast) --> char('('), !, value(arith(Ast)), char(')').
 simple_expr(integer(N)) --> integer(N), !.
-simple_expr(ident(I, Content)) --> ident(I), char('['), arith_expr(Content), char(']'), !.
+simple_expr(ident(I, Content)) --> ident(I), char('['), value(arith(Content)), char(']'), !.
 simple_expr(ident(I)) --> ident(I), !.
 
 summ_op(X) --> char(X), { member(X, ['+', '-']), ! }.
