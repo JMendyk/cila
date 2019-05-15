@@ -3,6 +3,13 @@
 :- consult(helpers).
 :- consult(env_helpers).
 
+arity_mismatch(Fun, closure(RealFunName, ArgNames, _), Args) :-
+    length(ArgNames, Expected),
+    length(Args, Got),
+    any_list_concat(["Arity mismatch while calling ", Fun, " (real name ", RealFunName, "). Function expected ", Expected, " arguments, got ", Got, "."], Msg),
+    writeln(Msg),
+    throw(arity_mismatch(Fun, Msg)).
+
 evalExpr(integer(N), _, N).
 evalExpr(ident(N), Env, Val) :-
     getVar(Env, (N, Val)).
@@ -14,7 +21,8 @@ evalExpr(ident(I, SubExpr), Env, Val) :-
 evalExpr(call(Fun, ArgExprs), Env, Val) :-
     parallelEval(ArgExprs, evalExpr, Env, Args),
     getVar(Env, (Fun, closure(RealFunName, ArgNames, Body))),
-    same_length(Args, ArgNames),
+    (same_length(Args, ArgNames); arity_mismatch(Fun, closure(RealFunName, ArgNames, Body), Args)),
+    !,
     callArgs(ArgNames, Args, CallArgs),
     createCall(Env, Env1, CallArgs),
     createVar(Env1, Env2, (RealFunName, closure(RealFunName, ArgNames, Body))),
