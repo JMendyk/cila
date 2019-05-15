@@ -1,3 +1,5 @@
+(* Primality checking implemented in CILA *)
+
 let N := 7919;
 let i := 2;
 let result := 1;

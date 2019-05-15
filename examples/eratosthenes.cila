@@ -17,3 +17,5 @@ while N >= prime do
     fi
     prime := prime + 1;
 od
+
+print(isPrime);
