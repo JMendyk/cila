@@ -1,5 +1,13 @@
-let fib := fun (n) 
-    let a := n + 2;
+(* Recursively-computed Fibonacci function in CILA *)
+
+let fib := fun (n)
+    if n < 2 then
+        return(n);
+    fi
+
+    return(fib(n-1) + fib(n-2));
 nuf;
 
-fib(10);
+let fib1 := fib; (* assign function to new variable *)
+
+print(fib1(10));

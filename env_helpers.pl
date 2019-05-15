@@ -38,13 +38,13 @@ createVar_(Mem, [(VarName, VarValue)|Mem], (VarName, VarValue)).
 report(env(GlobalMem, LocalMem, _, _), get, (VarName, _, _)) :-
     write("GM --> "), prettyVariables(GlobalMem, GM), writeln(GM),
     write("LM --> "), writeln(LocalMem),
-    atomics_to_string(["Undefined variable ", VarName, "."], Message),
+    any_list_concat(["Undefined variable ", VarName, "."], Message),
     writeln(Message).
 
 report(env(GlobalMem, LocalMem, _, _), set, (VarName, _, _)) :-
     write("GM --> "), prettyVariables(GlobalMem, GM), writeln(GM),
     write("LM --> "), writeln(LocalMem),
-    atomics_to_string(["Variable ", VarName, " assigned value before defining."], Message),
+    any_list_concat(["Variable ", VarName, " assigned value before defining."], Message),
     writeln(Message).
 
 getVar(Env, Var) :-
@@ -63,6 +63,11 @@ getVar_([], _) :-
     throw(undefined_variable).
 
 getVar_([Var|_], Var) :- !.
+
+getVar_([call_scope|_], (VarName, _)) :-
+    !,
+    any_list_concat(["Undefined variable ", VarName, " in current call scope."], Message),
+    writeln(Message).
 
 getVar_([_|Vars], Var) :-
     getVar_(Vars, Var).
@@ -83,6 +88,11 @@ setVar_([], _, _) :-
     throw(undefined_variable).
 
 setVar_([(VarName, _)|Mem], [(VarName, VarVal)|Mem], (VarName, VarVal)) :- !.
+
+setVar_([call_scope|_], _, (VarName, _)) :-
+    !,
+    any_list_concat(["Undefined variable ", VarName, " in current call scope."], Message),
+    writeln(Message).
 
 setVar_([V|Vars], [V|Vars1], Var) :-
     setVar_(Vars, Vars1, Var).
@@ -136,7 +146,7 @@ prettyEnv(env(GM, LM, IG, EV), Msg) :-
 prettyVariables(Variables, Friendly) :-
     maplist(friendlyVar, Variables, Friendly).
 
-friendlyVar((VarName, closure(ArgNames, _)), (VarName, closure(ArgNames))) :- !.
+friendlyVar((VarName, closure(I, ArgNames, _)), (VarName, closure(I, ArgNames))) :- !.
 
 friendlyVar((VarName, VarValue), (VarName, VarValue)) :- !.
 

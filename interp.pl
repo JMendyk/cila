@@ -13,13 +13,14 @@ evalExpr(ident(I, SubExpr), Env, Val) :-
     !.
 evalExpr(call(Fun, ArgExprs), Env, Val) :-
     parallelEval(ArgExprs, evalExpr, Env, Args),
-    getVar(Env, (Fun, closure(ArgNames, Body))),
+    getVar(Env, (Fun, closure(RealFunName, ArgNames, Body))),
     same_length(Args, ArgNames),
     callArgs(ArgNames, Args, CallArgs),
     createCall(Env, Env1, CallArgs),
-    evalProg(Body, Env1, Env2),
-    checkReturnValue(Env2, Val),
-    destroyCall(Env2, Env),
+    createVar(Env1, Env2, (RealFunName, closure(RealFunName, ArgNames, Body))),
+    evalProg(Body, Env2, Env3),
+    checkReturnValue(Env3, Val),
+    destroyCall(Env3, Env),
     !.
 
 evalExpr(arith_op(Op, Arg1, Arg2), Env, Val) :-
@@ -82,7 +83,7 @@ evalProg(def(I, array(LengthExpr, ArrayExprs)), Mem, MemOut) :-
     createVar(Mem, MemOut, (I, array(Length, Val))).
 
 evalProg(def(I, fun(ArgNames, Body)), Mem, MemOut) :-
-    createVar(Mem, MemOut, (I, closure(ArgNames, Body))).
+    createVar(Mem, MemOut, (I, closure(I, ArgNames, Body))).
 
 evalProg(assignment(I, Expr), Mem, MemOut) :-
     evalExpr(Expr, Mem, Val),
