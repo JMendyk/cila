@@ -1,3 +1,5 @@
+:- consult(helpers).
+
 digit(X) :- string_chars("0123456789", Digits), member(X, Digits), !.
 letter(X) :- 
     string_chars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", Letters), 
@@ -21,13 +23,32 @@ comment_content((Col, Line), Tokens, Out) -->
     { Col1 is Col + 1 }, 
     comment_content((Col1, Line), Tokens, Out).
 
+
+unexpected(In, TokensOut, Out) -->
+    unexpected_(In, [unexpected(Xs)|Tokens], Out),
+    { Xs = [] -> TokensOut = Tokens; TokensOut = [unexpected(Xs, In)|Tokens] }.
+
+unexpected_(In, [unexpected([])|Tokens], Out) -->
+    whitespace(In, Tokens, Out),
+    !.
+
+unexpected_((Col, Line), [unexpected([X|Xs])|Tokens], Out) -->
+    [X],
+    !,
+    { Col1 is Col + 1 },
+    unexpected_((Col1, Line), [unexpected(Xs)|Tokens], Out).
+
+unexpected_(In, [unexpected([])], In) -->
+    [], !.
+
 lexer(In, Tokens, Out) --> 
     (comment(In, Tokens, Out); 
     whitespace(In, Tokens, Out);
     integer(In, Tokens, Out);
     ident(In, Tokens, Out);
     keyword(In, Tokens, Out);
-    others(In, Tokens, Out)),
+    others(In, Tokens, Out);
+    unexpected(In, Tokens, Out)),
     !.
 lexer(Out, [], Out) --> [].
 
@@ -89,9 +110,9 @@ whitespace((Col, Line), Tokens, Out) -->
     { Col1 is Col + 1 },
     lexer((Col1, Line), Tokens, Out).
 
-pretty_tokens([], []).
-pretty_tokens([comment(_, _)|Ts], Ps) :- pretty_tokens(Ts, Ps), !.
-pretty_tokens([X|Ts], [X|Ps]) :- pretty_tokens(Ts, Ps).
+skip_comments([], []).
+skip_comments([comment(_, _)|Ts], Ps) :- skip_comments(Ts, Ps), !.
+skip_comments([X|Ts], [X|Ps]) :- skip_comments(Ts, Ps).
 
 readable_tokens([], []).
 readable_tokens([comment(_, _)|Ts], Ps) :- readable_tokens(Ts, Ps), !.
@@ -105,7 +126,19 @@ lex(Str, PTokens) :-
     string_chars(Str, Ls),
     !,
     phrase(lexer((1, 1), Tokens, _), Ls),
-    pretty_tokens(Tokens, PTokens).
+    check_unexpected_tokens(Tokens),
+    skip_comments(Tokens, PTokens).
+
+check_unexpected_tokens([unexpected(TextList, (Col, Line))|_]) :-
+    string_chars(Text, TextList),
+    any_list_concat(["Unexpected characters in source code starting at line ", Line, ", column ", Col, ": '", Text,"'!"], Msg),
+    writeln(Msg),
+    throw(unkown_tokens_in_input).
+
+check_unexpected_tokens([_|Xs]) :-
+    check_unexpected_tokens(Xs).
+
+check_unexpected_tokens([]).
 
 % lex_file(Path, PTokens) :-
 %     read_file_to_string(Path, Str, []),
