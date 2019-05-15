@@ -1,0 +1,38 @@
+(* Fibonacci function computed using matrix multiplication in CILA *)
+(* Additionally, demostration of using functions as first-class values *)
+
+(* Universal fast exponentiation function *)
+let fastPow := fun(multOp, id, base, exp)
+    if exp = 0 then
+        return(id);
+    fi
+    if exp = 1 then
+        return(base);
+    fi
+
+    let res := fastPow(multOp, id, base, exp div 2);
+    res := multOp(res, res);
+
+    if exp mod 2 = 1 then
+        res := multOp(res, base);
+    fi
+
+    return(res);
+nuf;
+
+let matrix2by2Mult := fun(m1, m2)
+    let mat := []{ 
+        m1[0] * m2[0] + m1[1] * m2[2],
+        m1[0] * m2[1] + m1[1] * m2[3],
+        m1[2] * m2[0] + m1[3] * m2[2],
+        m1[2] * m2[1] + m1[3] * m2[3]
+    };
+
+    return(mat);
+nuf;
+
+let I := []{ 1, 0, 0, 1 };
+let Fib := []{ 1, 1, 1, 0 };
+
+let fibResult := fastPow(matrix2by2Mult, I, Fib, 10);
+print(fibResult[0]);
