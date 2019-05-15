@@ -3,6 +3,29 @@ zip([], [], []) :- !.
 zip([X|Xs], [Y|Ys], [(X, Y)|XYs]) :-
     zip(Xs, Ys, XYs).
 
+any_list_concat(Any, Concat) :-
+    any_list_concat_(Any, Atoms),
+    atomic_list_concat(Atoms, Concat).
+
+any_list_concat(Any, Sep, Concat) :-
+    any_list_concat_(Any, Atoms),
+    atomic_list_concat(Atoms, Sep, Concat).
+
+any_list_concat_([], []) :- !.
+any_list_concat_([[]|Xs], [Y|Ys]) :-
+    !,
+    term_to_atom([], Y),
+    any_list_concat_(Xs, Ys).
+any_list_concat_([X|Xs], [X|Ys]) :-
+    atomic(X),
+    !,
+    any_list_concat_(Xs, Ys).
+any_list_concat_([X|Xs], [Y|Ys]) :-
+    compound(X),
+    !,
+    term_to_atom(X, Y),
+    any_list_concat_(Xs, Ys).
+
 % Array representation helpers:
 
 arr_set(array(Length, _), Idx, _, _) :-
@@ -68,3 +91,11 @@ evalBranch(true, EvalPred, Then, _, Mem, MemOut) :-
 evalBranch(false, EvalPred, _, Else, Mem, MemOut) :-
     !,
     call(EvalPred, Else, Mem, MemOut).
+
+selectBranch(true, Then, _, Mem, MemOut) :- 
+    !,
+    call(Then, Mem, MemOut).
+
+selectBranch(false, _, Else, Mem, MemOut) :-
+    !,
+    call(Else, Mem, MemOut).

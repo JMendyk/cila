@@ -98,8 +98,11 @@ instruction(Ast) --> definition(Ast), !.
 instruction(Ast) --> assign_inst(Ast), !.
 instruction(Ast) --> if_inst(Ast), !.
 instruction(Ast) --> while_inst(Ast), !.
-instruction(Ast) --> call_inst(Ast), !.
+instruction(Ast) --> call_inst(Ast), char(';'), !.
 
+value(arith(call(Fun, Args))) --> 
+    call_inst(call(Fun, Args)),
+    !.
 value(arith(Ast)) --> arith_expr(Ast).
 value(Ast) --> array_expr(Ast).
 value(boolean(Ast)) --> logic_expr(Ast),
@@ -124,7 +127,8 @@ definition(def(I, Value)) -->
 assign_inst(assignment(I, Ast)) --> 
     ident(I), 
     char(':='),
-    value(arith(Ast)), char(';').
+    value(arith(Ast)),
+    char(';').
 
 assign_inst(assignment(I, Sub, Ast)) --> 
     ident(I), 
@@ -144,8 +148,7 @@ while_inst(while(Cond, Body)) --> keyword(while), !, logic_expr(Cond), keyword(d
 call_inst(call(I, Args)) -->
     ident(I),
     sequence(char('('), arith_expr, char(','), char(')'), Args),
-    !,
-    char(';').
+    !.
 
 % Logic
 
@@ -173,6 +176,7 @@ arith_multiplicand(Ast) --> simple_expr(Ast).
 
 simple_expr(Ast) --> char('('), !, value(arith(Ast)), char(')').
 simple_expr(integer(N)) --> integer(N), !.
+simple_expr(Call) --> call_inst(Call), !.
 simple_expr(ident(I, Content)) --> ident(I), char('['), arith_expr(Content), char(']'), !.
 simple_expr(ident(I)) --> ident(I), !.
 
