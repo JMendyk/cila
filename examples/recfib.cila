@@ -10,4 +10,5 @@ nuf;
 
 let fib1 := fib; (* assign function to new variable *)
 
-print(fib1(10));
+print("Enter which fibonacci number to calculate:");
+print(fib1(read()));

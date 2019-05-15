@@ -25,4 +25,5 @@ let fib := fun(N)
     fi
 nuf;
 
-print(fib(10));
+print("Enter which fibonacci number to calculate:");
+print(fib(read()));

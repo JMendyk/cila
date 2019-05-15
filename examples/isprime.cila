@@ -1,6 +1,8 @@
 (* Primality checking implemented in CILA *)
 
-let N := 7919;
+print("Enter number to check its primality:");
+let N := read();
+
 let i := 2;
 let result := 1;
 
@@ -11,4 +13,8 @@ while i <= N div 2 and result = 1 do
     i := i + 1;
 od
 
-(* 2311, 729607, 5754853343 *)
+if result = 1 then
+    print("This number is prime");
+else
+    print("This number is not prime");
+fi

@@ -1,6 +1,7 @@
 (* Sieve of Eratosthenes implemented in CILA *)
 
-let N := 100;
+print("Up to which number should sieve be executed?");
+let N := read();
 
 let isPrime := [N+1]{ 1 };
 isPrime[1] := 0;
@@ -18,4 +19,23 @@ while N >= prime do
     prime := prime + 1;
 od
 
-print(isPrime);
+print("Check number's primality. Enter any number or 0 to exit.");
+
+let number := 1;
+
+while number > 0 do
+    number := read();
+    if number > N then
+        print("Sieve was executed to smaller number than this!");
+    else
+        if number > 0 then
+            if isPrime[number] = 1 then
+                print("This number is prime");
+            else 
+                print("This number is not prime");
+            fi
+        fi
+    fi
+od
+
+print("Exiting...");

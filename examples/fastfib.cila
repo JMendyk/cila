@@ -36,4 +36,4 @@ let Fib := []{ 1, 1, 1, 0 };
 
 print("Enter which fibonacci number to calculate:");
 let fibResult := fastPow(matrix2by2Mult, I, Fib, read());
-print(fibResult[0]);
+print(fibResult[1]);
