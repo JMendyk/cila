@@ -23,6 +23,24 @@ comment_content((Col, Line), Tokens, Out) -->
     { Col1 is Col + 1 }, 
     comment_content((Col1, Line), Tokens, Out).
 
+string((Col, Line), [string(String, (Col, Line))|Tokens], Out) --> 
+    ['\"'],
+    { Col1 is Col + 1 },
+    string_content((Col1, Line), [string(Content)|Tokens], Out),
+    { string_chars(String, Content) }.
+
+string_content((Col, Line), [string([])|Tokens], Out) --> 
+    ['\"'], !,
+    { Col1 is Col + 1 },
+    lexer((Col1, Line), Tokens, Out).
+string_content((Col, Line), [string([X|Xs])|Tokens], Out) --> 
+    [X],
+    { Col1 is Col + 1 }, 
+    string_content((Col1, Line), [string(Xs)|Tokens], Out).
+string_content(_, _, _) --> 
+    ['\n'], !,
+    throw("Strings cannot contain newlines!").
+
 
 unexpected(In, TokensOut, Out) -->
     unexpected_(In, [unexpected(Xs)|Tokens], Out),
@@ -45,6 +63,7 @@ lexer(In, Tokens, Out) -->
     (comment(In, Tokens, Out); 
     whitespace(In, Tokens, Out);
     integer(In, Tokens, Out);
+    string(In, Tokens, Out);
     ident(In, Tokens, Out);
     keyword(In, Tokens, Out);
     others(In, Tokens, Out);
@@ -97,7 +116,7 @@ others((Col, Line), [char(W, (Col, Line))|Tokens], Out) -->
     { Col1 is Col + 2 },
     lexer((Col1, Line), Tokens, Out).
 others((Col, Line), [char(W, (Col, Line))|Tokens], Out) -->
-    [W], { member(W, ['+', '-', '*', '^', '=', '<', '>', ';', '(', ')', '[', ']', '{', '}', ',']), ! },
+    [W], { member(W, ['+', '-', '*', '^', '=', '<', '>', ';', '(', ')', '[', ']', '{', '}', ',', '"']), ! },
     { Col1 is Col + 1 },
     lexer((Col1, Line), Tokens, Out).
 

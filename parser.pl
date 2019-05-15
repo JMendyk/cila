@@ -82,6 +82,8 @@ ident(I) --> [ident(I, _)].
 ident(I, CL) --> [ident(I, CL)].
 integer(I) --> [integer(I, _)].
 integer(I, CL) --> [integer(I, CL)].
+string(I) --> [string(I, _)].
+string(I, CL) --> [string(I, CL)].
 parser(Ast) --> program(Ast).
 
 array_expr(array(Length, Values)) -->
@@ -104,6 +106,7 @@ value(arith(call(Fun, Args))) -->
     call_inst(call(Fun, Args)),
     !.
 value(arith(Ast)) --> arith_expr(Ast).
+value(string(Content)) --> string(Content).
 value(Ast) --> array_expr(Ast).
 value(boolean(Ast)) --> logic_expr(Ast),
     { atomic_list_concat(["Attempted to introduce boolean value.\n", Ast, "Boolean expressions are not supported as values."], Message),
@@ -147,8 +150,14 @@ while_inst(while(Cond, Body)) --> keyword(while), !, logic_expr(Cond), keyword(d
 
 call_inst(call(I, Args)) -->
     ident(I),
-    sequence(char('('), arith_expr, char(','), char(')'), Args),
+    sequence(char('('), arith_expr_or_value, char(','), char(')'), Args),
     !.
+
+arith_expr_or_value(Ast) -->
+    arith_expr(Ast), !.
+
+arith_expr_or_value(Ast) -->
+    value(Ast).
 
 % Logic
 

@@ -18,6 +18,11 @@ evalExpr(ident(I, SubExpr), Env, Val) :-
     getVar(Env, (I, Arr)),
     catch(arr_get(Arr, Sub, Val), "List too short!", throw(("Array", I, Sub, "too short!"))),
     !.
+evalExpr(call("read", []), Env, Val) :-
+    read_line_to_string(user_input, Str),
+    atom_number(Str, X),
+    evalExpr(integer(X), Env, Val),
+    !.
 evalExpr(call(Fun, ArgExprs), Env, Val) :-
     parallelEval(ArgExprs, evalExpr, Env, Args),
     getVar(Env, (Fun, closure(RealFunName, ArgNames, Body))),
@@ -123,16 +128,21 @@ evalProg(call("return", [ReturnExpr]), Env, Env1) :-
 evalProg(call("return", _), _, _) :-
     throw(arity_mismatch("Return expects exactly one argument!")).
 
+evalProg(call("print", [string(Expr)]), Env, Env) :-
+    !,
+    any_list_concat(["[> ", Expr], Msg),
+    writeln(Msg).
+
 evalProg(call("print", [Expr]), Env, Env) :-
     !,
     evalExpr(Expr, Env, Val),
-    any_list_concat(["[>] ", Val], Msg),
+    any_list_concat(["[> ", Val], Msg),
     writeln(Msg).
 
 evalProg(call("env", []), Env, Env) :-
     !,
     prettyEnv(Env, PrettyEnv),
-    write("~~~~> "), writeln(PrettyEnv).
+    writeln(PrettyEnv).
 
 evalProg(call(Fun, ArgExprs), Mem, Mem) :-
     evalExpr(call(Fun, ArgExprs), Mem, _).
