@@ -1,4 +1,4 @@
-:- consult(helpers).
+:- ensure_loaded(helpers).
 
 % Predicates for working with interpreter's environment
 

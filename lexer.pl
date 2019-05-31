@@ -1,4 +1,4 @@
-:- consult(helpers).
+:- ensure_loaded(helpers).
 
 digit(X) :- string_chars("0123456789", Digits), member(X, Digits), !.
 letter(X) :- 

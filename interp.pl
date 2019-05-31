@@ -1,7 +1,7 @@
-:- consult(lexer).
-:- consult(parser).
-:- consult(helpers).
-:- consult(env_helpers).
+:- ensure_loaded(lexer).
+:- ensure_loaded(parser).
+:- ensure_loaded(helpers).
+:- ensure_loaded(env_helpers).
 
 arity_mismatch(Fun, closure(RealFunName, ArgNames, _), Args) :-
     length(ArgNames, Expected),
