@@ -125,3 +125,8 @@ run((Bytecode, JumpMapping), (S, M)) :-
     !,
     phrase(vm(([], []), (S, M)), Bytecode, _),
     retract(jump_table(Faster)).
+
+applyVMVarNames([], [], []).
+
+applyVMVarNames([(Idx, Value)|Idxs], [Name|Names], [(Name, Value)|Tail]) :-
+    applyVMVarNames(Idxs, Names, Tail).

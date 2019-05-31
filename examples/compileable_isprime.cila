@@ -1,0 +1,10 @@
+N := 1571;
+i := 2;
+result := 1;
+
+while i < N div 2 and result = 1 do
+    if N mod i = 0 then
+        result := 0;
+    fi
+    i := i + 1;
+od

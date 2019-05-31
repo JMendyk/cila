@@ -1,22 +1,8 @@
 :- consult(lexer).
 :- consult(parser).
+:- ensure_loaded(helpers).
 
-% Machine:
-% 8 registers r0-r7 (r0 being Accumulator), Stack
-
-% BYTECODES:
-% load_int(X) - load X on stack
-% load(X) - load variable X's value on stack
-% store(X) - pop value from stack and store it in variable X
-% add, sub, mult, div, mod - pop top values from stack, perform proper operation and put result on stack
-% and, or - pop two values from stack, perform proper operation and put result on stack
-% not - pop top value from stack and put negated on stack
-% jump(label) - jump to given label
-% jz(label) - pop value from stack and if it was zero jump to given label
-% jgtz(label) - pop value from stack and if it was greater or equal zero jump to given label
-% equal - pop two values from stack and push 1 if values were equal (otherwise 0)
-% lt - pop two values from stack and push 1 if top was less than second (otherwise 0)
-% leq - pop two values from stack and push 1 if top was less than or eqaul to second (otherwise 0)
+% Note: 
 
 get_head(T, T, T).
 
@@ -77,8 +63,13 @@ bytecode([C|Cs], InVs, OutVs) --> bytecode(C, InVs, Vs1), bytecode(Cs, Vs1, OutV
 
 bytecode(ident(I), InVs, OutVs) --> { code_of(I, InVs, OutVs, Code) }, [load(Code)].
 
-bytecode(ident(I) := Expr, InVs, OutVs) --> !, 
+bytecode(def(I, Expr), InVs, OutVs) --> !, 
     bytecode(Expr, InVs, Vs1), { code_of(I, Vs1, OutVs, Code) }, [store(Code)].
+
+bytecode(assignment(I, Expr), InVs, OutVs) --> !, 
+    bytecode(Expr, InVs, Vs1), { code_of(I, Vs1, OutVs, Code) }, [store(Code)].
+
+bytecode(X, _, _) --> { writeln(X), fail }.
 
 code_of(I, Vs, Out, Code) :-
     code_of(0, I, Vs, Out, Code).
@@ -90,7 +81,11 @@ code_of(N, I, [X|Is], [X|Is1], Code) :-
     code_of(N1, I, Is, Is1, Code).
 
 bytecode_of(Ast, (Bytecode, Mappings)) :-
-    phrase(bytecode(Ast, [], Mappings), Bytecode, []).
+    phrase(bytecode(Ast, [], Mappings), Bytecode, []),
+    !.
+
+bytecode_of(_, _) :-
+    writeln("Conversion to bytecode failed").
 
 bytecode_as_string(Ast, (List, Mappings)) :-
     bytecode_of(Ast, (Bytecode, Mappings)),

@@ -171,7 +171,7 @@ whileEval(false, while(_, _), Mem, Mem).
 
 interp(Ast, Memory) :-
     initEnv(Env),
-    evalProg(Ast, Env, Memory).
+    ((evalProg(Ast, Env, Memory), !); writeln("Interpreter failed unexpectedly.")).
 
 interp_file(Path, Memory) :-
     read_file_to_string(Path, Str, []),

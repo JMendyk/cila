@@ -207,4 +207,4 @@ mult_op(mod) --> keyword(mod).
 %     parse(Str, Tokens, Ast).
 
 parse(Tokens, Ast) :-
-    phrase(parser(Ast), Tokens).
+    ((phrase(parser(Ast), Tokens), !); writeln("Parsing failed, found unexpected token.")).
