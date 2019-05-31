@@ -95,13 +95,14 @@
 
 \maketitle
 
-\section{Grammar}
+\section*{Grammar}
 
 \newcommand{\tok}[1]{\textbf{#1}}
 % \newcommand{\nt}[1]{#1}
 
 \newcommand{\Program}{program }
 \newcommand{\Instruction}{instruction }
+\newcommand{\Assignment}{assignment }
 
 \newcommand{\LogicExpr}{logic\textsubscript{expr} }
 \newcommand{\LogicSummand}{logic\textsubscript{summand} }
@@ -126,13 +127,14 @@ alfanum &::=& \textit{letter} | alfanum \textit{letter} | alfanum \textit{digit}
 ident   &::=& alfanum (not in keyword) \\
 \midrule
 \Program &::=& \Instruction | \Program \Instruction \\
-\Instruction &::=& \tok{let} \tok{ident} := \ArithExpr ; \\
-&|& \tok{let} \tok{ident}[\Any{\ArithExpr}] := \ArithExpr ; \\
-&|& \tok{ident} := \ArithExpr ; \\
-&|& \tok{ident}[\ArithExpr] := \{ \ArithExpr, ... \} ; \\
+\Instruction &::=& \Assignment \\
 &|& \tok{if} \LogicExpr \tok{then} \Program \tok{fi} \\
 &|& \tok{if} \LogicExpr \tok{then} \Program \tok{else} \Program \tok{fi} \\
 &|& \tok{while} \LogicExpr \tok{do} \Program \tok{od} \\
+\Assignment &::=& \tok{let} \tok{ident} := \ArithExpr ; \\
+&|& \tok{let} \tok{ident} := [\Any{\ArithExpr}]\{ \ArithExpr, ... \} ; \\
+&|& \tok{ident}\Any{[\ArithExpr]} := \ArithExpr ; \\
+&|& \tok{fun} \tok{ident} \tok{(} \tok{ident}, ... \tok{)} \tok{nuf} ; \\
 \midrule
 \LogicExpr &::=& \Any{(\LogicExpr \textbf{or})} \LogicSummand \\
 \LogicSummand &::=& \Any{(\LogicSummand \textbf{and})} \LogicMultiplicand \\
@@ -143,7 +145,7 @@ ident   &::=& alfanum (not in keyword) \\
 \ArithExpr &::=& \Any{(\ArithExpr \SummOp)} \ArithSummand \\
 \ArithSummand &::=& \Any{(\ArithSummand \MultOp)} \ArithMultiplicand \\
 \ArithMultiplicand &::=& \SimpleExpr | \SimpleExpr \tok{\^} \ArithMultiplicand \\
-\SimpleExpr &::=& ( \ArithExpr ) | \tok{integer} | \tok{ident} | \tok{ident}[\ArithExpr] \\
+\SimpleExpr &::=& ( \ArithExpr ) | \tok{integer} | \tok{ident} | \tok{ident}[\ArithExpr] | \tok{ident}(\ArithExpr, ...) \\
 \SummOp &::=& \tok{+} | \tok{--} \\
 \MultOp &::=& \tok{*} | \tok{div} | \tok{mod}
 \end{tabularx}
